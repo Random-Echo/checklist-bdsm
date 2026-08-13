@@ -80,8 +80,24 @@ button.action:hover { background:#eef2f3; }
   font:inherit; background:white;
 }
 .safety-grid textarea { min-height:70px; resize:vertical; }
-.safety-check { flex-direction:row !important; align-items:center; font-weight:600 !important; gap:7px !important; }
-.safety-check input { width:auto; min-height:auto; }
+.safety-check-row {
+  grid-column:1 / -1;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:9px;
+  align-items:start;
+}
+.safety-check {
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:flex-start;
+  min-height:36px;
+  font-weight:600 !important;
+  gap:7px !important;
+  margin:0;
+}
+.safety-check input { width:auto; min-height:auto; margin:0; }
 
 .stats { display:flex; flex-wrap:wrap; gap:7px; margin-top:8px; font-size:12px; color:var(--muted); }
 .stat { background:white; border:1px solid var(--border); border-radius:999px; padding:5px 9px; }
@@ -442,6 +458,10 @@ main {
   .safety-grid {
     grid-template-columns:1fr;
     padding:7px;
+    gap:7px;
+  }
+  .safety-check-row {
+    grid-template-columns:1fr;
     gap:7px;
   }
 
@@ -1547,10 +1567,20 @@ body[data-readonly="true"] .note-input {
   background:#fff;
   color:var(--role-dark);
 }
+.quick-filter-btn.featured-incomplete.active {
+  background:var(--role);
+  color:#fff;
+  border-color:var(--role);
+}
 .quick-filter-btn.featured-session {
   border:2px solid #B58B00;
   background:#FFF7D1;
   color:#725700;
+}
+.quick-filter-btn.featured-session.active {
+  background:#B58B00;
+  color:#fff;
+  border-color:#B58B00;
 }
 
 @media (max-width:650px) {
@@ -2565,7 +2595,26 @@ body.help-open {
   padding:5px 7px;
 }
 .section-right {
-  padding:4px 8px;
+  display:grid;
+  grid-template-columns:var(--right-template);
+  width:var(--right-width);
+  min-width:var(--right-width);
+  padding:0;
+}
+.section-right-cell {
+  min-height:44px;
+  padding:6px 8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-right:1px solid var(--border);
+  background:#fff;
+}
+.section-right-spacer {
+  background:#fff;
+}
+.section-right-score {
+  justify-content:center;
 }
 .category-toggle {
   display:flex;
@@ -2610,20 +2659,29 @@ body.help-open {
   white-space:nowrap;
 }
 .category-rating {
+  width:100%;
   display:flex;
+  flex-direction:column;
   align-items:center;
+  justify-content:center;
   gap:4px;
   min-height:34px;
-  white-space:nowrap;
+  text-align:center;
 }
 .category-rating-label {
-  margin-right:4px;
   color:#555f66;
   font-size:10px;
   font-weight:900;
+  line-height:1.1;
+}
+.category-rating-buttons {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  flex-wrap:nowrap;
 }
 .category-rating-state {
-  margin-left:5px;
   padding:2px 6px;
   border-radius:999px;
   background:#eef1f3;
@@ -2730,17 +2788,23 @@ body.help-open {
      les boutons permettant de replier/déplier chaque catégorie. */
   .section-left,
   .section-right {
-    display:flex !important;
     min-height:42px;
   }
   .section-left {
+    display:flex !important;
     width:var(--left-width);
     min-width:var(--left-width);
     padding:4px 5px;
   }
   .section-right {
+    display:grid !important;
+    grid-template-columns:var(--right-template);
     width:var(--right-width);
     min-width:var(--right-width);
+    padding:0;
+  }
+  .section-right-cell {
+    min-height:42px;
     padding:4px 6px;
   }
   .category-toggle {
@@ -2761,12 +2825,13 @@ body.help-open {
     gap:2px;
   }
   .category-rating-label {
-    margin-right:3px;
     font-size:8px;
+  }
+  .category-rating-buttons {
+    gap:2px;
   }
   .category-rating-state {
     font-size:8px;
-    margin-left:3px;
   }
   .category-score-btn {
     width:27px;
@@ -2938,16 +3003,16 @@ body.help-open {
               <label><span data-i18n="safeWordLabel">Safeword — arrêt immédiat</span>
                 <input id="safeWord" type="text" placeholder="Ex. rouge" data-i18n-placeholder="safeWordPlaceholder">
               </label>
+              <label><span data-i18n="marksLabel">Marques visibles</span>
+                <select id="marks">
+                  <option value="" data-i18n="toDefine">À définir</option><option value="Non" data-i18n="no">Non</option><option value="Oui, légères" data-i18n="yesLight">Oui, légères</option><option value="Oui" data-i18n="yes">Oui</option>
+                </select>
+              </label>
               <label><span data-i18n="slowSignalLabel">Signal non verbal — ralentir / ajuster</span>
                 <input id="slowSignal" type="text" placeholder="Ex. 1 tape / lever la main" data-i18n-placeholder="slowSignalPlaceholder">
               </label>
               <label><span data-i18n="stopSignalLabel">Signal non verbal — arrêt immédiat</span>
                 <input id="stopSignal" type="text" placeholder="Ex. 3 tapes / objet lâché" data-i18n-placeholder="stopSignalPlaceholder">
-              </label>
-              <label><span data-i18n="marksLabel">Marques visibles</span>
-                <select id="marks">
-                  <option value="" data-i18n="toDefine">À définir</option><option value="Non" data-i18n="no">Non</option><option value="Oui, légères" data-i18n="yesLight">Oui, légères</option><option value="Oui" data-i18n="yes">Oui</option>
-                </select>
               </label>
               <label><span data-i18n="hardLimitsLabel">Hard limits</span>
                 <textarea id="hardLimits" placeholder="Pratiques absolument exclues…" data-i18n-placeholder="hardLimitsPlaceholder"></textarea>
@@ -2960,9 +3025,11 @@ body.help-open {
                   <option value="" data-i18n="toDefine">À définir</option><option value="Aucune" data-i18n="mediaNone">Aucune</option><option value="Privées uniquement" data-i18n="mediaPrivate">Privées uniquement</option><option value="Selon accord explicite au cas par cas" data-i18n="mediaCaseByCase">Selon accord explicite au cas par cas</option>
                 </select>
               </label>
-              <label class="safety-check"><input id="noIntoxication" type="checkbox"> <span data-i18n="noIntoxication">Pas de jeu sous alcool / intoxication</span></label>
-              <label class="safety-check"><input id="nextDayDebrief" type="checkbox"> <span data-i18n="nextDayDebrief">Débrief le lendemain</span></label>
-              <label class="safety-check"><input id="stopImmediate" type="checkbox"> <span data-i18n="stopImmediate">Arrêt immédiat au safeword d’arrêt / signal non verbal d’arrêt</span></label>
+              <div class="safety-check-row">
+                <label class="safety-check"><input id="nextDayDebrief" type="checkbox"> <span data-i18n="nextDayDebrief">Débrief le lendemain</span></label>
+                <label class="safety-check"><input id="stopImmediate" type="checkbox"> <span data-i18n="stopImmediate">Arrêt immédiat au safeword d’arrêt / signal non verbal d’arrêt</span></label>
+                <label class="safety-check"><input id="noIntoxication" type="checkbox"> <span data-i18n="noIntoxication">Pas de jeu sous alcool / intoxication</span></label>
+              </div>
             </div>
           </div>
         </section>
@@ -4561,7 +4628,6 @@ function categoryScoreState(categoryName) {
 }
 
 function renderCategoryScoreControls(categoryName) {
-  const field = categoryRoleField();
   const state = categoryScoreState(categoryName);
   const editable = canEditRole(currentRole);
   const selectedUnknown = state.kind === "unknown" ? " selected" : "";
@@ -4577,9 +4643,19 @@ function renderCategoryScoreControls(categoryName) {
       : `${state.value}/5`;
   return `<div class="category-rating" title="${t("categoryAllHint")}">
     <span class="category-rating-label">${t("categoryRating")} · ${roleLabel(currentRole)}</span>
-    ${unknown}${scores}
+    <div class="category-rating-buttons">${unknown}${scores}</div>
     <span class="category-rating-state">${stateText}</span>
   </div>`;
+}
+
+function renderCategoryRightHeader(categoryName) {
+  const targetKey = currentRole === "dom" ? "wantDom" : "wantSub";
+  return getVisibleScrollColumns().map(col => {
+    if (col.key !== targetKey) {
+      return `<div class="section-right-cell section-right-spacer" data-col="${col.key}"></div>`;
+    }
+    return `<div class="section-right-cell section-right-score" data-col="${col.key}">${renderCategoryScoreControls(categoryName)}</div>`;
+  }).join("");
 }
 
 function applyCategoryScore(categoryName, rawScore) {
@@ -4632,7 +4708,7 @@ function render() {
       </button>
     </div>`;
     rightHtml += `<div class="section-right" data-sync="section-${syncIndex}">
-      ${renderCategoryScoreControls(categoryName)}
+      ${renderCategoryRightHeader(categoryName)}
     </div>`;
     syncIndex++;
 
