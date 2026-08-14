@@ -4,14 +4,26 @@ const CHECKLIST_DATA = window.CHECKLIST_DATA;
 if (!CHECKLIST_VARIANT || !CHECKLIST_DATA) throw new Error("Checklist configuration missing.");
 const initialItems = CHECKLIST_DATA.items;
 const categoryColors = CHECKLIST_DATA.categoryColors;
-// v120 — moteur commun optimisé : catalogue statique compact, rendu en une passe,
+// v122 — moteur commun optimisé : catalogue statique compact, rendu en une passe,
 // colonnes et sélecteurs DOM mis en cache, métriques du tirage calculées en une passe.
-const APP_VERSION = "v120";
+const APP_VERSION = "v122";
 
 const LANG_KEY = window.CHECKLIST_SITE.languageKey;
 const LEGACY_LANG_KEY = window.CHECKLIST_SITE.legacyLanguageKey;
 const CATEGORY_EN = CHECKLIST_DATA.categoryEn;
 const I18N = CHECKLIST_DATA.i18n;
+
+// v122 — convention spatiale unique : homme/bleu à gauche, femme/prune à droite.
+// Chaque variante déclare quel rôle BDSM correspond à chaque côté.
+const ROLE_VISUAL_ORDER = (() => {
+  const order = Array.isArray(CHECKLIST_VARIANT.visualRoleOrder) ? CHECKLIST_VARIANT.visualRoleOrder : ["sub","dom"];
+  return order.length === 2 && new Set(order).size === 2 && order.every(role => role === "sub" || role === "dom")
+    ? [...order]
+    : ["sub","dom"];
+})();
+function visualRolePair(subValue, domValue) {
+  return ROLE_VISUAL_ORDER.map(role => role === "sub" ? subValue : domValue);
+}
 
 let currentLang = (() => {
   const saved = localStorage.getItem(LANG_KEY);
@@ -256,12 +268,18 @@ const fixedColumns = [
 
 const scrollColumns = [
   { key:"explanation", labelKey:"columnExplanation", shortKey:"columnExplanation", defaultVisibleMobile:false },
-  { key:"wantSub", labelKey:"columnWantSub", shortKey:"columnWantSubShort", owner:"sub" },
-  { key:"wantDom", labelKey:"columnWantDom", shortKey:"columnWantDomShort", owner:"dom" },
-  { key:"priorSub", labelKey:"columnPriorSub", shortKey:"columnPriorSubShort", owner:"sub" },
-  { key:"priorDom", labelKey:"columnPriorDom", shortKey:"columnPriorDomShort", owner:"dom" },
-  { key:"afterSub", labelKey:"columnAfterSub", shortKey:"columnAfterSubShort", owner:"sub" },
-  { key:"afterDom", labelKey:"columnAfterDom", shortKey:"columnAfterDomShort", owner:"dom" },
+  ...visualRolePair(
+    { key:"wantSub", labelKey:"columnWantSub", shortKey:"columnWantSubShort", owner:"sub" },
+    { key:"wantDom", labelKey:"columnWantDom", shortKey:"columnWantDomShort", owner:"dom" }
+  ),
+  ...visualRolePair(
+    { key:"priorSub", labelKey:"columnPriorSub", shortKey:"columnPriorSubShort", owner:"sub" },
+    { key:"priorDom", labelKey:"columnPriorDom", shortKey:"columnPriorDomShort", owner:"dom" }
+  ),
+  ...visualRolePair(
+    { key:"afterSub", labelKey:"columnAfterSub", shortKey:"columnAfterSubShort", owner:"sub" },
+    { key:"afterDom", labelKey:"columnAfterDom", shortKey:"columnAfterDomShort", owner:"dom" }
+  ),
   { key:"doneTogether", labelKey:"columnTogether", shortKey:"columnTogetherShort" },
   { key:"notes", labelKey:"columnNotes", shortKey:"columnNotesShort" },
 ];
@@ -730,6 +748,13 @@ const statStarredEl = document.getElementById("statStarred");
 const statModeEl = document.getElementById("statMode");
 const MOBILE_MQ = window.matchMedia("(max-width:650px)");
 const roleButtons = [...document.querySelectorAll("[data-role-choice]")];
+const roleSwitchEl = document.querySelector(".role-switch");
+if (roleSwitchEl) {
+  for (const role of ROLE_VISUAL_ORDER) {
+    const btn = roleButtons.find(candidate => candidate.dataset.roleChoice === role);
+    if (btn) roleSwitchEl.appendChild(btn);
+  }
+}
 
 let randomDrawHistory = (() => {
   try {
@@ -867,8 +892,10 @@ const quickFilterDefs = [
   { key:"", labelKey:"all" },
   { key:"incompleteRole", labelKey:"incomplete", featuredIncomplete:true },
   { key:"session", labelKey:"session", featuredSession:true },
-  { key:"testSub", labelKey:"favoriteSubFilter" },
-  { key:"testDom", labelKey:"favoriteDomFilter" },
+  ...visualRolePair(
+    { key:"testSub", labelKey:"favoriteSubFilter" },
+    { key:"testDom", labelKey:"favoriteDomFilter" }
+  ),
   { key:"testBoth", labelKey:"commonChoices", featured:true },
   { key:"both4", labelKey:"bothAtLeast4" },
   { key:"both4todo", labelKey:"bothAtLeast4New" },
@@ -1563,9 +1590,9 @@ function renderHeads() {
   const visibleKeys = new Set(visibleScroll.map(col => col.key));
   const groupDefs = [
     { keys:["explanation"], labelKey:"columnExplanation" },
-    { keys:["wantSub","wantDom"], labelKey:"columnWantSub", rolePair:true },
-    { keys:["priorSub","priorDom"], labelKey:"columnPriorSub", rolePair:true },
-    { keys:["afterSub","afterDom"], labelKey:"columnAfterSub", rolePair:true },
+    { keys:visualRolePair("wantSub","wantDom"), labelKey:"columnWantSub", rolePair:true },
+    { keys:visualRolePair("priorSub","priorDom"), labelKey:"columnPriorSub", rolePair:true },
+    { keys:visualRolePair("afterSub","afterDom"), labelKey:"columnAfterSub", rolePair:true },
     { keys:["doneTogether"], labelKey:"columnTogether" },
     { keys:["notes"], labelKey:"columnNotes" },
   ];
@@ -1588,7 +1615,7 @@ function renderHeads() {
     const plainLabel = label.replace(/<br\s*\/?>/gi, " ");
     let roleDetail = "";
     if (owners.includes("sub") && owners.includes("dom")) {
-      roleDetail = ` — ${roleColorName("sub")} : ${roleLabel("sub")} · ${roleColorName("dom")} : ${roleLabel("dom")}`;
+      roleDetail = ` — ${ROLE_VISUAL_ORDER.map(role => `${roleColorName(role)} : ${roleLabel(role)}`).join(" · ")}`;
     } else if (owners.length === 1) {
       roleDetail = ` — ${roleLabel(owners[0])}`;
     }
@@ -2443,18 +2470,23 @@ function updateStats(visibleCount = null) {
     if (effectiveRoleScore(item, "dom") === FAVORITE_SCORE) favoriteDomCount++;
   }
 
+  const priorCounts = {sub:priorSubCount, dom:priorDomCount};
+  const ratedCounts = {sub:ratedSub, dom:ratedDom};
+  const favoriteCounts = {sub:favoriteSubCount, dom:favoriteDomCount};
+  const roleStats = (counts, formatter) => ROLE_VISUAL_ORDER.map(role => formatter(role, counts[role])).join(" · ");
+
   statDoneEl.textContent = currentLang === "fr"
-    ? `Déjà fait avant : S ${priorSubCount} · D ${priorDomCount}`
-    : `Done before: S ${priorSubCount} · D ${priorDomCount}`;
+    ? `Déjà fait avant : ${roleStats(priorCounts, (role, count) => `${roleLabel(role)} ${count}`)}`
+    : `Done before: ${roleStats(priorCounts, (role, count) => `${roleLabel(role)} ${count}`)}`;
   statTogetherEl.textContent = currentLang === "fr"
     ? `${togetherCount} faites ensemble`
     : `${togetherCount} done together`;
   statRatedEl.textContent = currentLang === "fr"
-    ? `Progression : ${roleLabel("sub")} ${ratedSub}/${items.length} · ${roleLabel("dom")} ${ratedDom}/${items.length}`
-    : `Progress: ${roleLabel("sub")} ${ratedSub}/${items.length} · ${roleLabel("dom")} ${ratedDom}/${items.length}`;
+    ? `Progression : ${roleStats(ratedCounts, (role, count) => `${roleLabel(role)} ${count}/${items.length}`)}`
+    : `Progress: ${roleStats(ratedCounts, (role, count) => `${roleLabel(role)} ${count}/${items.length}`)}`;
   statStarredEl.textContent = currentLang === "fr"
-    ? `Favoris : ⭐ S ${favoriteSubCount} · 👑 D ${favoriteDomCount}`
-    : `Favorites: ⭐ S ${favoriteSubCount} · 👑 D ${favoriteDomCount}`;
+    ? `Favoris : ${roleStats(favoriteCounts, (role, count) => `${favoriteSymbol(role)} ${roleLabel(role)} ${count}`)}`
+    : `Favorites: ${roleStats(favoriteCounts, (role, count) => `${favoriteSymbol(role)} ${roleLabel(role)} ${count}`)}`;
 
   const statMode = document.getElementById("statMode");
   if (statMode) statMode.textContent = currentLang === "fr"
@@ -2534,9 +2566,15 @@ function pickRandomPractice() {
     : "";
   const addLabel = fantasyOnly ? t("addFantasyToSession") : t("addRandomToSession");
 
+  const scoreByRole = {sub:s, dom:d};
+  const sourceByRole = {sub:sSource, dom:dSource};
+  const pairSummary = ROLE_VISUAL_ORDER.map(role =>
+    `${roleLabel(role)} <strong>${esc(scoreLabel(scoreByRole[role], false, role))}</strong> (${sourceByRole[role]})`
+  ).join(" · ");
+
   randomResult.innerHTML =
     `<strong>#${picked.displayIndex ?? picked.id} — ${esc(localizedPractice(picked))}</strong> (${esc(localizedCategory(picked.category))})${riskInfo} — ` +
-    `${roleLabel("sub")} <strong>${esc(scoreLabel(s, false, "sub"))}</strong> (${sSource}) · ${roleLabel("dom")} <strong>${esc(scoreLabel(d, false, "dom"))}</strong> (${dSource}).` +
+    `${pairSummary}.` +
     `${fantasyBanner}${cycleText}<div class="random-result-actions"><button class="random-session-btn" data-random-session-id="${picked.id}" type="button" ${already || readOnly ? "disabled" : ""}>${already ? t("alreadyInSession") : addLabel}</button></div>`;
   updateCompatibilityIndicator();
 }

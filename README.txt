@@ -1,4 +1,4 @@
-CHECKLISTS D/s — v120 — VERSION AUDITÉE
+CHECKLISTS D/s — v122 — VERSION AUDITÉE
 
 Structure :
 Tous les fichiers sont placés à la racine du site pour éviter les oublis de sous-dossiers lors du déploiement GitHub Pages.
@@ -18,7 +18,9 @@ Stockages distincts :
 - maledomChecklist... : Maître & Soumise
 La langue et la confirmation 18+ sont communes au site.
 
-Audit v120 :
+Audit v122 :
+- alignement FR/EN de l’accueil uniformisé (titres et paragraphes gardent leur affichage naturel) ;
+- couleurs des cartes d’accueil calées sur les couleurs de rôle des pages : Maîtresse prune, Maître bleu ;
 - renommage définitif des fichiers Domina → Maîtresse : maitresse-soumis.html et maitresse-soumis.js ;
 - ancienne page domina-soumis.html supprimée, sans redirection ;
 - identifiant de variante Maîtresse & Soumis harmonisé en maitresse-soumis ;
@@ -29,5 +31,7 @@ Audit v120 :
 - responsive PC réorganisé par plages de largeur au lieu de comprimer les boutons ;
 - accueil mobile converti en mise en page plein viewport : les deux cartes, le titre, le sous-titre, l’avertissement de stockage et le pied de page tiennent sans scroll ;
 - mode encore plus compact activé automatiquement sur les petits écrans de faible hauteur ;
-- moteur, badges, guides et cache-busting harmonisés en v120 ;
+- moteur, badges, guides et cache-busting harmonisés en v122 ;
 - catalogues, risques, IDs, niveaux, réponses et logique fonctionnelle conservés.
+
+Convention visuelle v122 : homme/bleu toujours à gauche et femme/prune toujours à droite dans les paires de rôles (cartes, sélecteur, colonnes et filtres). La couleur générale de la carte/page continue d’indiquer la dynamique dominante.

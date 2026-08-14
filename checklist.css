@@ -5,6 +5,7 @@
   --sub-role-color:#2F6F8F; --sub-role-soft:#E8F2F7; --sub-role-dark:#1E536C; --sub-role-accent:#5AA0C2; --sub-role-head:#274F62;
   --dom-role-color:#8B3F6F; --dom-role-soft:#F7EAF2; --dom-role-dark:#67294D; --dom-role-accent:#C06A9C; --dom-role-head:#67334F;
   --role-color:var(--sub-role-color); --role-soft:var(--sub-role-soft); --role-dark:var(--sub-role-dark);
+  --pair-left-accent:var(--sub-role-accent); --pair-right-accent:var(--dom-role-accent);
   --variant-bg:#f5f6f7; --variant-header:rgba(245,246,247,.98);
   --s0:#f4cccc; --s1:#f9cb9c; --s2:#dce5f5; --s3:#fff2cc; --s4:#d9ead3; --s5:#b6d7a8;
   --left-template: 48px 180px 260px;
@@ -907,6 +908,8 @@ body[data-checklist-id="maitre-soumise"] {
   --dom-role-dark:#1E536C;
   --dom-role-accent:#5AA0C2;
   --dom-role-head:#274F62;
+  --pair-left-accent:var(--dom-role-accent);
+  --pair-right-accent:var(--sub-role-accent);
 }
 
 /* v115 — verrouillage explicite du code couleur par sexe.
@@ -1011,7 +1014,7 @@ header {
   pointer-events:none;
 }
 .head-cell.role-pair-head.pair-both::before {
-  background:linear-gradient(90deg,var(--sub-role-accent) 0 50%,var(--dom-role-accent) 50% 100%);
+  background:linear-gradient(90deg,var(--pair-left-accent) 0 50%,var(--pair-right-accent) 50% 100%);
 }
 .head-cell.role-pair-head.pair-sub::before { background:var(--sub-role-accent); }
 .head-cell.role-pair-head.pair-dom::before { background:var(--dom-role-accent); }
@@ -4082,7 +4085,7 @@ body[data-checklist-id="maitre-soumise"] .table-shell {
 
 
 /* =========================================================
-   v120 — en-tête PC robuste : aucun bouton de rôle ne peut être rogné
+   v122 — en-tête PC robuste : aucun bouton de rôle ne peut être rogné
    ========================================================= */
 .title-actions > .home-button { grid-area:home; }
 .title-actions > .role-switch { grid-area:role; }
@@ -4154,7 +4157,7 @@ body[data-checklist-id="maitre-soumise"] .table-shell {
 
 
 /* =========================================================
-   v120 — finition responsive : mobile compact + rôles PC sûrs
+   v122 — finition responsive : mobile compact + rôles PC sûrs
    ========================================================= */
 
 /* Sur ordinateur, réserver une largeur confortable au sélecteur de rôle.
@@ -4294,7 +4297,7 @@ body[data-checklist-id="maitre-soumise"] .table-shell {
 
 
 /* =========================================================
-   v120 — responsive final de l’en-tête : aucune troncature
+   v122 — responsive final de l’en-tête : aucune troncature
    ========================================================= */
 
 /* Base commune : les six contrôles ont une zone nommée stable. */
@@ -4389,7 +4392,7 @@ body[data-checklist-id="maitre-soumise"] .table-shell {
 }
 
 /* iPhone / mobile : disposition imposée et compacte.
-   Ligne 1 : ⌂ + Soumis/Maîtresse (ou Soumise/Maître) + FR/EN.
+   Ligne 1 : ⌂ + homme/bleu à gauche, femme/prune à droite + FR/EN.
    Ligne 2 : ? + Masquer/Afficher + Lecture seule. */
 @media (max-width:650px) {
   .top {
