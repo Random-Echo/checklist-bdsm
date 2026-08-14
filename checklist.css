@@ -4062,3 +4062,53 @@ body[data-checklist-id="maitre-soumise"] .table-shell {
   .view-toggle { grid-column:1 / span 3; grid-row:2; }
   .readonly-toggle { grid-column:4 / span 3; grid-row:2; }
 }
+
+
+/* =========================================================
+   v114 — grille d’en-tête robuste + sélecteur de rôle non compressible
+   ========================================================= */
+.title-actions > .home-button { grid-area:home; }
+.title-actions > .role-switch { grid-area:role; }
+.title-actions > .language-switch { grid-area:lang; }
+.title-actions > .help-button { grid-area:help; }
+.title-actions > .view-toggle { grid-area:view; }
+.title-actions > .readonly-toggle { grid-area:readonly; }
+.role-switch { min-width:250px; }
+.role-choice { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding-inline:10px; }
+
+@media (min-width:1181px) {
+  .title-actions {
+    grid-template-areas:"home role lang help view readonly";
+    grid-template-columns:110px minmax(250px,270px) 108px 40px minmax(145px,165px) minmax(145px,165px);
+  }
+}
+@media (max-width:1180px) and (min-width:901px) {
+  .title-role-row { grid-template-columns:1fr; }
+  .title-actions {
+    width:100%;
+    grid-template-areas:"home role lang help view readonly";
+    grid-template-columns:105px minmax(250px,1.4fr) 108px 40px minmax(145px,1fr) minmax(145px,1fr);
+  }
+}
+@media (max-width:900px) and (min-width:651px) {
+  .title-role-row { grid-template-columns:1fr; }
+  .title-actions {
+    width:100%;
+    grid-template-areas:
+      "home role role role lang help"
+      "view view view readonly readonly readonly";
+    grid-template-columns:repeat(6,minmax(0,1fr));
+  }
+  .role-switch { min-width:0; }
+  .home-button,.role-switch,.language-switch,.help-button,.view-toggle,.readonly-toggle { width:100%; }
+  .language-switch { min-width:0; }
+}
+@media (max-width:650px) {
+  .title-actions {
+    grid-template-areas:
+      "home role role role lang help"
+      "view view view readonly readonly readonly";
+    grid-template-columns:repeat(6,minmax(0,1fr));
+  }
+  .role-switch { min-width:0; }
+}

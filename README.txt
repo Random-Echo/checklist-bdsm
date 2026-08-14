@@ -2,22 +2,22 @@ CHECKLISTS D/s — v113 — VERSION FINALE AUDITÉE
 
 Structure :
 - index.html : accueil et choix de la dynamique
-- domina-soumis.html : Checklist Femdom 600 — Domina & Soumis
+- domina-soumis.html : Checklist Femdom 600 — Maîtresse & Soumis
 - maitre-soumise.html : Checklist Maledom 600 — Maître & Soumise
 - assets/checklist.css : styles communs
 - assets/site-bootstrap.js : langue + confirmation 18+ communes
 - assets/checklist-engine.js : moteur fonctionnel unique
-- data/domina-soumis.js : catalogue et traductions Domina & Soumis
+- data/domina-soumis.js : catalogue et traductions Maîtresse & Soumis
 - data/maitre-soumise.js : catalogue et traductions Maître & Soumise
 
 Stockages distincts :
-- femdomChecklist... : Domina & Soumis
+- femdomChecklist... : Maîtresse & Soumis
 - maledomChecklist... : Maître & Soumise
 La langue et la confirmation 18+ sont communes au site.
 
 Compatibilité :
-- les anciennes données Domina & Soumis restent compatibles ;
-- les anciennes sauvegardes Domina & Soumis non étiquetées restent importables ;
+- les anciennes données Maîtresse & Soumis restent compatibles ;
+- les anciennes sauvegardes Maîtresse & Soumis non étiquetées restent importables ;
 - les nouvelles sauvegardes sont identifiées par variante ;
 - les imports croisés entre variantes sont refusés.
 
