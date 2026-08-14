@@ -4082,7 +4082,7 @@ body[data-checklist-id="maitre-soumise"] .table-shell {
 
 
 /* =========================================================
-   v118 — en-tête PC robuste : aucun bouton de rôle ne peut être rogné
+   v119 — en-tête PC robuste : aucun bouton de rôle ne peut être rogné
    ========================================================= */
 .title-actions > .home-button { grid-area:home; }
 .title-actions > .role-switch { grid-area:role; }
@@ -4154,7 +4154,7 @@ body[data-checklist-id="maitre-soumise"] .table-shell {
 
 
 /* =========================================================
-   v118 — finition responsive : mobile compact + rôles PC sûrs
+   v119 — finition responsive : mobile compact + rôles PC sûrs
    ========================================================= */
 
 /* Sur ordinateur, réserver une largeur confortable au sélecteur de rôle.
@@ -4294,7 +4294,7 @@ body[data-checklist-id="maitre-soumise"] .table-shell {
 
 
 /* =========================================================
-   v118 — responsive final de l’en-tête : aucune troncature
+   v119 — responsive final de l’en-tête : aucune troncature
    ========================================================= */
 
 /* Base commune : les six contrôles ont une zone nommée stable. */
