@@ -11,7 +11,7 @@ for (let i = 0; i < initialItems.length; i++) {
 const categoryColors = CHECKLIST_DATA.categoryColors;
 // v127 — optimisation sans changement fonctionnel : payload catalogue allégé,
 // accès DOM mis en cache, scroll mobile incrémental et écritures de sécurité regroupées.
-const APP_VERSION = "v127";
+const APP_VERSION = "v128";
 
 const LANG_KEY = window.CHECKLIST_SITE.languageKey;
 const LEGACY_LANG_KEY = window.CHECKLIST_SITE.legacyLanguageKey;

@@ -1,4 +1,11 @@
-CHECKLISTS D/s — v127 — VERSION AUDITÉE ET OPTIMISÉE
+CHECKLISTS D/s — v128 — DIRTY TALK / JEU VERBAL
+
+Évolution v128 :
+- ajout d’une 39e catégorie « Dirty talk / jeu verbal » dans les deux catalogues ;
+- 13 pratiques par catalogue, sans dépasser 600 pratiques ;
+- réorganisation de pratiques verbales déjà présentes et remplacement de pratiques de service/protocole redondantes ;
+- formulations adaptées séparément à Maîtresse & Soumis et Maître & Soumise ;
+- aucun changement d’ID : les réponses et sauvegardes existantes restent rattachées aux mêmes entrées.
 
 Structure :
 Tous les fichiers sont placés à la racine du site pour éviter les oublis de sous-dossiers lors du déploiement GitHub Pages.
