@@ -3,22 +3,15 @@ const CHECKLIST_VARIANT = window.CHECKLIST_VARIANT;
 const CHECKLIST_DATA = window.CHECKLIST_DATA;
 if (!CHECKLIST_VARIANT || !CHECKLIST_DATA) throw new Error("Checklist configuration missing.");
 const initialItems = CHECKLIST_DATA.items;
-// v127 — l’ordre du catalogue est la numérotation d’affichage.
-// Les fichiers de données n’ont donc plus besoin de répéter displayIndex 600 fois.
 for (let i = 0; i < initialItems.length; i++) {
   if (!Number.isInteger(initialItems[i].displayIndex)) initialItems[i].displayIndex = i + 1;
 }
 const categoryColors = CHECKLIST_DATA.categoryColors;
-// v130 — moteur optimisé : stockage sparse, sauvegardes hors chemin critique,
-// caches DOM/session, rendu par catégories indexées et chargement anticipé via defer.
-const APP_VERSION = "v130";
+const APP_VERSION = "v131";
 
 const LANG_KEY = window.CHECKLIST_SITE.languageKey;
-const LEGACY_LANG_KEY = window.CHECKLIST_SITE.legacyLanguageKey;
 const CATEGORY_EN = CHECKLIST_DATA.categoryEn;
 const I18N = CHECKLIST_DATA.i18n;
-
-// v124 — convention spatiale unique : homme/bleu à gauche, femme/prune à droite.
 // Chaque variante déclare quel rôle BDSM correspond à chaque côté.
 const ROLE_VISUAL_ORDER = (() => {
   const order = Array.isArray(CHECKLIST_VARIANT.visualRoleOrder) ? CHECKLIST_VARIANT.visualRoleOrder : ["sub","dom"];
@@ -136,7 +129,6 @@ function focusTrapIn(container, event) {
 function acceptAdultGate() {
   try {
     localStorage.setItem(window.CHECKLIST_SITE.adultKey, "true");
-    localStorage.setItem(window.CHECKLIST_SITE.legacyAdultKey, "true");
   } catch (_) {}
   document.documentElement.classList.remove("adult-gate-required");
   if (adultGate) adultGate.setAttribute("aria-hidden", "true");
@@ -204,7 +196,6 @@ function setLanguage(lang, persist = true) {
   currentLang = next;
   if (persist) {
     localStorage.setItem(LANG_KEY, currentLang);
-    localStorage.setItem(LEGACY_LANG_KEY, currentLang);
   }
 
   applyStaticLanguage();
@@ -225,10 +216,8 @@ function setLanguage(lang, persist = true) {
 // Moteur commun : chaque variante fournit son propre espace de stockage.
 const VARIANT_STORAGE_KEYS = Object.freeze({
   items: `${CHECKLIST_VARIANT.storageNamespace}_v1`,
-  scoreSchema: `${CHECKLIST_VARIANT.storageNamespace}_scoreSchema_v2`,
   safety: `${CHECKLIST_VARIANT.storageNamespace}_safety_v1`,
   columns: `${CHECKLIST_VARIANT.storageNamespace}_columns_v5`,
-  legacyColumns: `${CHECKLIST_VARIANT.storageNamespace}_columns_v4`,
   role: `${CHECKLIST_VARIANT.storageNamespace}_role_v1`,
   otherRoleColumns: `${CHECKLIST_VARIANT.storageNamespace}_otherRoleColumns_v1`,
   readOnly: `${CHECKLIST_VARIANT.storageNamespace}_readOnly_v1`,
@@ -242,13 +231,9 @@ const VARIANT_STORAGE_KEYS = Object.freeze({
   randomHistory: `${CHECKLIST_VARIANT.storagePrefix}Checklist_randomHistory_v1`
 });
 const STORAGE_KEY = VARIANT_STORAGE_KEYS.items;
-const SCORE_SCHEMA_KEY = VARIANT_STORAGE_KEYS.scoreSchema;
-const SCORE_SCHEMA_VALUE = "favorite4-fantasy5-real0to4-v1";
 const BACKUP_VARIANT_ID = CHECKLIST_VARIANT.id;
-const ALLOW_UNTAGGED_BACKUPS = !!CHECKLIST_VARIANT.allowUntaggedBackups;
 const SAFETY_KEY = VARIANT_STORAGE_KEYS.safety;
 const COLUMN_PREFS_KEY = VARIANT_STORAGE_KEYS.columns;
-const LEGACY_COLUMN_PREFS_KEY = VARIANT_STORAGE_KEYS.legacyColumns;
 const ROLE_KEY = VARIANT_STORAGE_KEYS.role;
 const OTHER_ROLE_COLUMNS_KEY = VARIANT_STORAGE_KEYS.otherRoleColumns;
 const READONLY_KEY = VARIANT_STORAGE_KEYS.readOnly;
@@ -292,13 +277,8 @@ const scrollColumns = [
 function columnLabel(col) { return t(col.labelKey); }
 function columnShort(col) { return t(col.shortKey); }
 
-function validScore(v, legacyNoFantasy=false, legacyNoFavorite=false) {
-  if (!Number.isInteger(v)) return null;
-  // v99 : 0=🚫, 1=Pas maintenant, 2=Neutre, 3=🔥 Envie, 4=Favori, 5=💭 Fantasme.
-  if (v >= 0 && v <= 3) return v;
-  if (v === FAVORITE_SCORE) return legacyNoFavorite ? 3 : FAVORITE_SCORE;
-  if (v === FANTASY_SCORE) return legacyNoFantasy ? 3 : FANTASY_SCORE;
-  return null;
+function validScore(v) {
+  return Number.isInteger(v) && v >= 0 && v <= FANTASY_SCORE ? v : null;
 }
 
 function isRealWorldScore(v) {
@@ -377,142 +357,40 @@ function sessionBlockReason(item) {
   if (hasLimit(item)) return "limit";
   return null;
 }
-
-// v99 : l'expérience antérieure de chaque rôle est distincte du fait de l'avoir fait ensemble.
 function hasRoleExperience(item, role) {
   return role === "sub"
     ? !!item.priorSub || !!item.doneTogether
     : !!item.priorDom || !!item.doneTogether;
 }
 
-function normalizeItem(base, old={}, options={}) {
-  const legacyFive = options.legacyFive === true;
-  const legacyFour = options.legacyFour === true;
-  const oldClean = { ...(old || {}) };
-  delete oldClean["wantSub" + "Source"];
-  delete oldClean["wantDom" + "Source"];
-
-  const normalizedTogether = typeof oldClean.doneTogether === "boolean" ? oldClean.doneTogether : false;
-
-  // Anciennes versions : « Fait ensemble » pouvait aussi renseigner l’ancien historique Soumis ; la migration reste prudente.
-  // Par prudence, on ne migre l'ancien done vers « Déjà fait avant — Soumis » que si doneTogether n'était pas vrai.
-  const normalizedPriorSub = typeof oldClean.priorSub === "boolean"
-    ? oldClean.priorSub
-    : (typeof oldClean.doneBeforeSub === "boolean"
-      ? oldClean.doneBeforeSub
-      : (oldClean.done === true && !normalizedTogether));
-  const normalizedPriorDom = typeof oldClean.priorDom === "boolean"
-    ? oldClean.priorDom
-    : (typeof oldClean.doneBeforeDom === "boolean" ? oldClean.doneBeforeDom : false);
-
-  let normalizedWantSub =
-    validScore(oldClean.wantSub, legacyFive, legacyFour) ??
-    validScore(oldClean.interest, legacyFive, legacyFour) ??
-    validScore(base.interest, legacyFive, legacyFour);
-  let normalizedWantDom = validScore(oldClean.wantDom, legacyFive, legacyFour);
-  let normalizedAfterSub =
-    validScore(oldClean.afterSub, legacyFive, legacyFour) ??
-    validScore(oldClean.after, legacyFive, legacyFour);
-  let normalizedAfterDom = validScore(oldClean.afterDom, legacyFive, legacyFour);
-
-  // Les anciens marqueurs ⭐/👑 deviennent directement le niveau Favori de l'appréciation effective.
-  if (oldClean.testSub === true || oldClean.starred === true) {
-    if (normalizedTogether && normalizedAfterSub === 3) normalizedAfterSub = FAVORITE_SCORE;
-    else if (normalizedWantSub === 3) normalizedWantSub = FAVORITE_SCORE;
-  }
-  if (oldClean.testDom === true) {
-    if (normalizedTogether && normalizedAfterDom === 3) normalizedAfterDom = FAVORITE_SCORE;
-    else if (normalizedWantDom === 3) normalizedWantDom = FAVORITE_SCORE;
-  }
-
-  if (!normalizedPriorSub && !normalizedTogether) normalizedAfterSub = null;
-  if (!normalizedPriorDom && !normalizedTogether) normalizedAfterDom = null;
-
+function normalizeItem(base, saved={}) {
+  const doneTogether = saved.doneTogether === true;
+  const priorSub = saved.priorSub === true;
+  const priorDom = saved.priorDom === true;
   return {
     ...base,
-    ...oldClean,
-    wantSub: normalizedWantSub,
-    wantDom: normalizedWantDom,
-    priorSub: !!normalizedPriorSub,
-    priorDom: !!normalizedPriorDom,
-    doneTogether: !!normalizedTogether,
-    afterSub: normalizedAfterSub,
-    afterDom: normalizedAfterDom,
-    notes: typeof oldClean.notes === "string" ? oldClean.notes : "",
-    id: base.id,
-    category: base.category,
-    practice: base.practice,
-    explanation: base.explanation,
-    displayIndex: base.displayIndex,
-    practiceEn: base.practiceEn,
-    explanationEn: base.explanationEn,
+    wantSub: validScore(saved.wantSub),
+    wantDom: validScore(saved.wantDom),
+    priorSub,
+    priorDom,
+    doneTogether,
+    afterSub: (priorSub || doneTogether) ? validScore(saved.afterSub) : null,
+    afterDom: (priorDom || doneTogether) ? validScore(saved.afterDom) : null,
+    notes: typeof saved.notes === "string" ? saved.notes : "",
     randomizable: base.randomizable !== false,
     level: Number.isInteger(base.level) ? base.level : 3,
     risk: ["normal","caution","high"].includes(base.risk) ? base.risk : "normal"
   };
 }
 
-
-const LEGACY_DUPLICATE_ID_MAP = {"20":92,"36":35,"4":329,"177":230,"387":319,"238":178,"180":210,"6":14};
-
-function canonicalPracticeId(id) {
-  const n = Number(id);
-  return LEGACY_DUPLICATE_ID_MAP[n] || n;
-}
-
-function mergeDuplicateUserAnswers(primary={}, duplicate={}, legacyNoFantasy=false) {
-  const merged = { ...duplicate, ...primary };
-
-  for (const key of ["wantSub","wantDom","afterSub","afterDom","interest","after"]) {
-    const p = validScore(primary[key], legacyNoFantasy);
-    const d = validScore(duplicate[key], legacyNoFantasy);
-    if (p == null && d != null) merged[key] = d;
-  }
-
-  for (const key of ["priorSub","priorDom","doneBeforeSub","doneBeforeDom","testSub","testDom","starred","done","doneTogether"]) {
-    if (primary[key] === true || duplicate[key] === true) merged[key] = true;
-  }
-
-  const pNotes = typeof primary.notes === "string" ? primary.notes.trim() : "";
-  const dNotes = typeof duplicate.notes === "string" ? duplicate.notes.trim() : "";
-  if (!pNotes && dNotes) merged.notes = duplicate.notes;
-  else if (pNotes && dNotes && pNotes !== dNotes) merged.notes = primary.notes + "\n" + duplicate.notes;
-
-  return merged;
-}
-
-function migrateDuplicateIdsInMap(byId, legacyNoFantasy=false) {
-  for (const [oldIdRaw, targetIdRaw] of Object.entries(LEGACY_DUPLICATE_ID_MAP)) {
-    const oldId = Number(oldIdRaw);
-    const targetId = Number(targetIdRaw);
-    const duplicate = byId.get(oldId);
-    if (!duplicate) continue;
-    const primary = byId.get(targetId) || {};
-    byId.set(targetId, mergeDuplicateUserAnswers(primary, duplicate, legacyNoFantasy));
-  }
-  return byId;
-}
-
 let items;
 try {
-  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-  const localScoreSchema = localStorage.getItem(SCORE_SCHEMA_KEY);
-  const localSupportsFantasy = localScoreSchema === SCORE_SCHEMA_VALUE || localScoreSchema === "fantasy5-real0to3-v2" || localScoreSchema === "fantasy5-v1";
-  const localSupportsFavorite = localScoreSchema === SCORE_SCHEMA_VALUE;
-  if (Array.isArray(saved)) {
-    const byId = migrateDuplicateIdsInMap(new Map(saved.map(x => [Number(x.id), x])), !localSupportsFantasy);
-    items = initialItems.map(base => normalizeItem(base, byId.get(Number(base.id)) || {}, {
-      legacyFive:!localSupportsFantasy,
-      legacyFour:!localSupportsFavorite
-    }));
-  } else {
-    items = initialItems.map(base => normalizeItem(base, base));
-  }
-} catch(e) {
-  items = initialItems.map(base => normalizeItem(base, base));
+  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  const byId = new Map(Array.isArray(saved) ? saved.filter(x => x && x.id != null).map(x => [Number(x.id), x]) : []);
+  items = initialItems.map(base => normalizeItem(base, byId.get(Number(base.id)) || {}));
+} catch (_) {
+  items = initialItems.map(base => normalizeItem(base));
 }
-
-// v90 : index légers pour éviter les recherches linéaires répétées dans les 600 pratiques.
 let itemsById = new Map();
 let itemsByCategory = new Map();
 let searchBaseById = new Map();
@@ -589,12 +467,9 @@ function rebuildItemIndexes() {
 
 rebuildItemIndexes();
 
-// v90 : localStorage ne conserve plus une copie du catalogue statique.
-// Les anciennes sauvegardes complètes restent lisibles ; après chargement, elles sont compactées.
 try {
   const compact = serializeLocalItems();
   if (localStorage.getItem(STORAGE_KEY) !== compact) localStorage.setItem(STORAGE_KEY, compact);
-  localStorage.setItem(SCORE_SCHEMA_KEY, SCORE_SCHEMA_VALUE);
 } catch (_) {}
 
 let sessionOrder = [];
@@ -602,7 +477,7 @@ try {
   const savedSession = JSON.parse(localStorage.getItem(SESSION_KEY) || "[]");
   if (Array.isArray(savedSession)) {
     const validIds = new Set(initialItems.map(x => Number(x.id)));
-    sessionOrder = [...new Set(savedSession.map(canonicalPracticeId).filter(id => validIds.has(id)))];
+    sessionOrder = [...new Set(savedSession.map(Number).filter(id => validIds.has(id)))];
   }
 } catch (_) {
   sessionOrder = [];
@@ -620,27 +495,15 @@ let experienceMode = (() => {
 })();
 
 const allCatalogCategories = [...new Set(initialItems.map(x => x.category))];
-function migrateCategoryNames(list) {
-  const result = [];
-  const migrations = CHECKLIST_VARIANT.categoryMigrations || {};
-  for (const name of Array.isArray(list) ? list : []) {
-    const mapped = migrations[name];
-    if (Array.isArray(mapped)) result.push(...mapped);
-    else if (typeof mapped === "string") result.push(mapped);
-    else result.push(name);
-  }
-  return [...new Set(result)];
-}
 let collapsedCategories = (() => {
   const raw = localStorage.getItem(COLLAPSED_CATEGORIES_KEY);
   if (raw === null) {
-    // Première ouverture de v67 : on présente d'abord les catégories,
-    // plutôt qu'un mur de plusieurs centaines de lignes.
+    // Par défaut, les catégories sont repliées pour éviter un mur de centaines de lignes.
     return new Set(allCatalogCategories);
   }
   try {
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return new Set(migrateCategoryNames(parsed).filter(x => allCatalogCategories.includes(x)));
+    if (Array.isArray(parsed)) return new Set(parsed.filter(x => allCatalogCategories.includes(x)));
   } catch (_) {}
   return new Set();
 })();
@@ -775,7 +638,6 @@ const statRatedEl = document.getElementById("statRated");
 const statStarredEl = document.getElementById("statStarred");
 const statModeEl = document.getElementById("statMode");
 const safetyFields = [...document.querySelectorAll(".safety input,.safety select,.safety textarea")];
-// v125 : le paysage iPhone utilise volontairement la géométrie mobile :
 // une seule colonne fixe (Pratique), sans colonne Catégorie.
 const MOBILE_MQ = window.matchMedia("(max-width:650px), (orientation: landscape) and (max-height:520px) and (max-width:1100px)");
 const roleButtons = [...document.querySelectorAll("[data-role-choice]")];
@@ -792,7 +654,7 @@ let randomDrawHistory = (() => {
     const raw = JSON.parse(localStorage.getItem(RANDOM_HISTORY_KEY) || "[]");
     if (!Array.isArray(raw)) return new Set();
     const validIds = new Set(initialItems.map(x => Number(x.id)));
-    return new Set(raw.map(canonicalPracticeId).filter(id => validIds.has(id)));
+    return new Set(raw.map(Number).filter(id => validIds.has(id)));
   } catch (_) {
     return new Set();
   }
@@ -815,28 +677,9 @@ function normalizeRandomThreshold(value, fallback) {
 
 function applyRandomPreferences(prefs, persist=false) {
   const p = prefs && typeof prefs === "object" ? prefs : {};
-
-  // v99 : migration des anciens réglages à seuil unique.
-  if (p.minOne || p.minOther) {
-    minRandomOne.value = normalizeRandomThreshold(p.minOne, "want");
-    minRandomOther.value = normalizeRandomThreshold(p.minOther, "neutral");
-    randomIncludeNeutralNeutral.checked = p.includeNeutralNeutral === true;
-  } else if (p.onlyBothTest === true || Number(p.minScore) >= 4) {
-    minRandomOne.value = "favorite";
-    minRandomOther.value = "favorite";
-    randomIncludeNeutralNeutral.checked = false;
-  } else if (Number(p.minScore) === 2) {
-    minRandomOne.value = "neutral";
-    minRandomOther.value = "neutral";
-    // L'ancien seuil « Neutre ou mieux des deux » incluait Neutre + Neutre.
-    randomIncludeNeutralNeutral.checked = true;
-  } else {
-    // Nouveau comportement recommandé : une vraie envie d'un côté, au moins neutre de l'autre.
-    minRandomOne.value = "want";
-    minRandomOther.value = "neutral";
-    randomIncludeNeutralNeutral.checked = false;
-  }
-
+  minRandomOne.value = normalizeRandomThreshold(p.minOne, "want");
+  minRandomOther.value = normalizeRandomThreshold(p.minOther, "neutral");
+  randomIncludeNeutralNeutral.checked = p.includeNeutralNeutral === true;
   if (typeof p.onlyNew === "boolean") randomOnlyNew.checked = p.onlyNew;
   if (typeof p.excludeHighRisk === "boolean") randomExcludeHighRisk.checked = p.excludeHighRisk;
   if (typeof p.noRepeat === "boolean") randomNoRepeat.checked = p.noRepeat;
@@ -937,11 +780,9 @@ const quickFilterDefs = [
 
 
 function normalizeBackupType(payload) {
-  if (payload && typeof payload === "object" && !Array.isArray(payload)) {
-    if (["full","sub","dom"].includes(payload.backupType)) return payload.backupType;
-  }
-  // Toutes les anciennes sauvegardes sont considérées comme complètes.
-  return "full";
+  return payload && typeof payload === "object" && ["full","sub","dom"].includes(payload.backupType)
+    ? payload.backupType
+    : null;
 }
 
 
@@ -1241,40 +1082,17 @@ function defaultColumnVisibility(col) {
 
 function loadVisibleColumns() {
   try {
-    const currentRaw = localStorage.getItem(COLUMN_PREFS_KEY);
-    const isMigration = !currentRaw;
-    const saved = JSON.parse(
-      currentRaw ||
-      localStorage.getItem(LEGACY_COLUMN_PREFS_KEY) ||
-      "{}"
+    const saved = JSON.parse(localStorage.getItem(COLUMN_PREFS_KEY) || "{}");
+    return Object.fromEntries(
+      [...fixedColumns, ...scrollColumns].map(col => [
+        col.key,
+        Object.prototype.hasOwnProperty.call(saved, col.key) ? saved[col.key] !== false : defaultColumnVisibility(col)
+      ])
     );
-
-    const result = {};
-    for (const col of [...fixedColumns, ...scrollColumns]) {
-      let hasSaved = Object.prototype.hasOwnProperty.call(saved, col.key);
-      let savedValue = hasSaved ? saved[col.key] : undefined;
-      if (col.key === "priorSub" && !hasSaved && Object.prototype.hasOwnProperty.call(saved, "done")) {
-        hasSaved = true;
-        savedValue = saved.done;
-      }
-      result[col.key] = hasSaved ? savedValue !== false : defaultColumnVisibility(col);
-    }
-
-    // v46 : la colonne Notes revient dans l'affichage par défaut.
-    // Lors de la migration depuis v4, on conserve toutes les autres préférences,
-    // mais on rend Notes visible une fois. L'utilisateur peut ensuite la masquer.
-    if (isMigration) {
-      result.notes = true;
-      localStorage.setItem(COLUMN_PREFS_KEY, JSON.stringify(result));
-    }
-
-    return result;
-  } catch(e) {
-    const result = Object.fromEntries(
+  } catch (_) {
+    return Object.fromEntries(
       [...fixedColumns, ...scrollColumns].map(col => [col.key, defaultColumnVisibility(col)])
     );
-    result.notes = true;
-    return result;
   }
 }
 function saveVisibleColumns() {
@@ -1508,7 +1326,6 @@ function save(touchModified = true, scopes = null) {
   if (touchModified) markModified(scopes, false);
   persistModifiedMetadata();
   localStorage.setItem(STORAGE_KEY, serializeLocalItems());
-  localStorage.setItem(SCORE_SCHEMA_KEY, SCORE_SCHEMA_VALUE);
 }
 
 let saveTimer = null;
@@ -2692,18 +2509,7 @@ function getSafety() {
 }
 function applySafety(s) {
   if (!s || typeof s !== "object") return;
-
-  // Migration v32 -> v33 :
-  // l'ancien signal non verbal unique est considéré comme le signal d'arrêt.
-  const migrated = {
-    ...s,
-    slowSignal: typeof s.slowSignal === "string" ? s.slowSignal : "",
-    stopSignal: typeof s.stopSignal === "string"
-      ? s.stopSignal
-      : (typeof s.nonVerbal === "string" ? s.nonVerbal : "")
-  };
-
-  for (const [k,v] of Object.entries(migrated)) {
+  for (const [k,v] of Object.entries(s)) {
     const el = document.getElementById(k);
     if (!el) continue;
     if (el.type === "checkbox") el.checked = !!v;
@@ -3386,174 +3192,112 @@ function renderCategoryControls() {
 function importChecklistJson(raw) {
   if (readOnly) throw new Error(t("readOnlyActive"));
   const payload = typeof raw === "string" ? JSON.parse(raw) : raw;
-  if (!payload || typeof payload !== "object") throw new Error(t("invalidBackup"));
-
-  const incomingVariant = !Array.isArray(payload) && typeof payload.variantId === "string" ? payload.variantId : "";
-  if ((incomingVariant && incomingVariant !== BACKUP_VARIANT_ID) || (!incomingVariant && !ALLOW_UNTAGGED_BACKUPS)) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new Error(t("invalidBackup"));
+  if (payload.version !== 1 || payload.variantId !== BACKUP_VARIANT_ID) {
     throw new Error(currentLang === "fr"
-      ? "Cette sauvegarde appartient à une autre checklist. Aucune donnée n’a été importée."
-      : "This backup belongs to a different checklist. No data was imported.");
+      ? "Cette sauvegarde n’est pas compatible avec cette checklist."
+      : "This backup is not compatible with this checklist.");
   }
 
   const backupType = normalizeBackupType(payload);
-  const versionNumber = !Array.isArray(payload) ? Number(payload.version) : NaN;
-  const appVersionNumber = !Array.isArray(payload) ? Number((String(payload.appVersion || "").match(/^v(\d+)/) || [])[1]) : NaN;
-  const sourceSupportsFantasy = (Number.isFinite(versionNumber) && versionNumber >= 25) || (Number.isFinite(appVersionNumber) && appVersionNumber >= 91);
-  const sourceSupportsFavorite = (!Array.isArray(payload) && payload.scoreSchema === SCORE_SCHEMA_VALUE) || (Number.isFinite(appVersionNumber) && appVersionNumber >= 94);
-  const incomingScore = value => validScore(value, !sourceSupportsFantasy, !sourceSupportsFavorite);
-  const importedItems = Array.isArray(payload) ? payload : payload.items;
-  if (!Array.isArray(importedItems)) throw new Error(currentLang === "fr" ? "La sauvegarde ne contient pas de liste de pratiques." : "The backup does not contain a practice list.");
-
-  const byId = migrateDuplicateIdsInMap(new Map(importedItems.filter(x => x && x.id != null).map(x => [Number(x.id), x])), !sourceSupportsFantasy);
+  if (!backupType || !Array.isArray(payload.items)) throw new Error(t("invalidBackup"));
+  const byId = new Map(payload.items.filter(x => x && x.id != null).map(x => [Number(x.id), x]));
   let updated = 0;
   let safetyMergeResult = { merged:getSafety(), conflicts:[], changed:false, present:false };
 
   if (backupType === "full") {
     items = initialItems.map(base => {
-      const current = itemsById.get(Number(base.id)) || normalizeItem(base, base);
+      const current = itemsById.get(Number(base.id)) || normalizeItem(base);
       const incoming = byId.get(Number(base.id));
       if (!incoming) return normalizeItem(base, current);
-
       updated++;
-      return normalizeItem(base, {
-        ...current,
-        ...incoming,
-        wantSub: Object.prototype.hasOwnProperty.call(incoming, "wantSub")
-          ? incomingScore(incoming.wantSub)
-          : (incomingScore(incoming.interest) ?? validScore(current.wantSub)),
-        wantDom: Object.prototype.hasOwnProperty.call(incoming, "wantDom")
-          ? incomingScore(incoming.wantDom)
-          : validScore(current.wantDom),
-        priorSub: typeof incoming.priorSub === "boolean"
-          ? incoming.priorSub
-          : (typeof incoming.done === "boolean" ? (incoming.done && incoming.doneTogether !== true) : !!current.priorSub),
-        priorDom: typeof incoming.priorDom === "boolean" ? incoming.priorDom : !!current.priorDom,
-        testSub: typeof incoming.testSub === "boolean" ? incoming.testSub : undefined,
-        testDom: typeof incoming.testDom === "boolean" ? incoming.testDom : undefined,
-        starred: typeof incoming.starred === "boolean" ? incoming.starred : undefined,
-        afterSub: Object.prototype.hasOwnProperty.call(incoming, "afterSub")
-          ? incomingScore(incoming.afterSub)
-          : (incomingScore(incoming.after) ?? validScore(current.afterSub)),
-        afterDom: Object.prototype.hasOwnProperty.call(incoming, "afterDom")
-          ? incomingScore(incoming.afterDom)
-          : validScore(current.afterDom),
-        doneTogether: typeof incoming.doneTogether === "boolean" ? incoming.doneTogether : !!current.doneTogether,
-        notes: typeof incoming.notes === "string" ? incoming.notes : (current.notes || "")
-      }, { legacyFive:!sourceSupportsFantasy, legacyFour:!sourceSupportsFavorite });
+      return normalizeItem(base, incoming);
     });
 
-    if (!Array.isArray(payload) && payload.safety && typeof payload.safety === "object") {
+    if (payload.safety && typeof payload.safety === "object") {
       localStorage.setItem(SAFETY_KEY, JSON.stringify(payload.safety));
       applySafety(payload.safety);
     }
 
-    if (!Array.isArray(payload) && Array.isArray(payload.sessionOrder)) {
+    if (Array.isArray(payload.sessionOrder)) {
       const validIds = new Set(initialItems.map(x => Number(x.id)));
-      sessionOrder = [...new Set(payload.sessionOrder.map(canonicalPracticeId).filter(id => validIds.has(id)))];
+      sessionOrder = [...new Set(payload.sessionOrder.map(Number).filter(id => validIds.has(id)))];
       saveSessionOrder(false);
       renderSessionPanel();
     }
 
-    if (!Array.isArray(payload) && payload.columnPreferences && typeof payload.columnPreferences === "object") {
+    if (payload.columnPreferences && typeof payload.columnPreferences === "object") {
       for (const col of [...fixedColumns, ...scrollColumns]) {
         if (Object.prototype.hasOwnProperty.call(payload.columnPreferences, col.key)) {
           visibleColumns[col.key] = payload.columnPreferences[col.key] !== false;
-        } else if (col.key === "priorSub" && Object.prototype.hasOwnProperty.call(payload.columnPreferences, "done")) {
-          visibleColumns[col.key] = payload.columnPreferences.done !== false;
         }
       }
       saveVisibleColumns();
       renderColumnControls();
     }
 
-    if (!Array.isArray(payload) && ["beginner","confirmed","advanced"].includes(payload.experienceMode)) {
+    if (["beginner","confirmed","advanced"].includes(payload.experienceMode)) {
       experienceMode = payload.experienceMode;
       localStorage.setItem(EXPERIENCE_MODE_KEY, experienceMode);
       renderExperienceModeUI();
     }
 
-    if (!Array.isArray(payload) && Array.isArray(payload.collapsedCategories)) {
-      collapsedCategories = new Set(
-        migrateCategoryNames(payload.collapsedCategories).filter(name => allCatalogCategories.includes(name))
-      );
+    if (Array.isArray(payload.collapsedCategories)) {
+      collapsedCategories = new Set(payload.collapsedCategories.filter(name => allCatalogCategories.includes(name)));
       saveCollapsedCategories();
     }
 
-    if (!Array.isArray(payload) && payload.randomPreferences && typeof payload.randomPreferences === "object") {
+    if (payload.randomPreferences && typeof payload.randomPreferences === "object") {
       applyRandomPreferences(payload.randomPreferences, true);
     }
 
-    if (!Array.isArray(payload) && Array.isArray(payload.randomDrawHistory)) {
+    if (Array.isArray(payload.randomDrawHistory)) {
       const validIds = new Set(initialItems.map(x => Number(x.id)));
-      randomDrawHistory = new Set(payload.randomDrawHistory.map(canonicalPracticeId).filter(id => validIds.has(id)));
+      randomDrawHistory = new Set(payload.randomDrawHistory.map(Number).filter(id => validIds.has(id)));
       saveRandomHistory();
     }
 
     const sourceModifiedAt = incomingRelevantModifiedAt(payload, "full") || new Date().toISOString();
     lastModifiedAt = sourceModifiedAt;
     localStorage.setItem(LAST_MODIFIED_KEY, lastModifiedAt);
-
-    if (!Array.isArray(payload) && payload.modifiedAtByScope && typeof payload.modifiedAtByScope === "object") {
+    if (payload.modifiedAtByScope && typeof payload.modifiedAtByScope === "object") {
       for (const scope of ["sub","dom","common"]) {
-        modifiedScopes[scope] = typeof payload.modifiedAtByScope[scope] === "string"
-          ? payload.modifiedAtByScope[scope]
-          : sourceModifiedAt;
+        modifiedScopes[scope] = typeof payload.modifiedAtByScope[scope] === "string" ? payload.modifiedAtByScope[scope] : sourceModifiedAt;
       }
     } else {
       modifiedScopes = { sub:sourceModifiedAt, dom:sourceModifiedAt, common:sourceModifiedAt };
     }
     saveModifiedScopes();
-
   } else {
-    // Sauvegarde individuelle : elle ne touche QUE les champs appartenant au rôle.
-    // "Fait ensemble" est fusionné en OR : un faux importé n'efface jamais un vrai local.
     let sharedPromoted = false;
     items = initialItems.map(base => {
-      const current = itemsById.get(Number(base.id)) || normalizeItem(base, base);
+      const current = itemsById.get(Number(base.id)) || normalizeItem(base);
       const incoming = byId.get(Number(base.id));
       if (!incoming) return normalizeItem(base, current);
-
       updated++;
       const mergedDoneTogether = !!current.doneTogether || incoming.doneTogether === true;
       if (!current.doneTogether && incoming.doneTogether === true) sharedPromoted = true;
 
       if (backupType === "sub") {
-        const hasWant = Object.prototype.hasOwnProperty.call(incoming, "wantSub");
-        const hasAfter = Object.prototype.hasOwnProperty.call(incoming, "afterSub");
-        const nextWantSub = hasWant ? incomingScore(incoming.wantSub) : validScore(current.wantSub);
-        const incomingPriorSub = typeof incoming.priorSub === "boolean"
-          ? incoming.priorSub
-          : (typeof incoming.done === "boolean" ? (incoming.done && incoming.doneTogether !== true) : !!current.priorSub);
         return normalizeItem(base, {
           ...current,
-          wantSub: nextWantSub,
-          priorSub: incomingPriorSub,
-          testSub: typeof incoming.testSub === "boolean" ? incoming.testSub : undefined,
-          starred: typeof incoming.starred === "boolean" ? incoming.starred : undefined,
+          wantSub: validScore(incoming.wantSub),
+          priorSub: incoming.priorSub === true,
           doneTogether: mergedDoneTogether,
-          afterSub: hasAfter ? incomingScore(incoming.afterSub) : validScore(current.afterSub)
-        }, { legacyFive:!sourceSupportsFantasy, legacyFour:!sourceSupportsFavorite });
+          afterSub: validScore(incoming.afterSub)
+        });
       }
-
-      const hasWant = Object.prototype.hasOwnProperty.call(incoming, "wantDom");
-      const hasAfter = Object.prototype.hasOwnProperty.call(incoming, "afterDom");
-      const nextWantDom = hasWant ? incomingScore(incoming.wantDom) : validScore(current.wantDom);
-      const incomingPriorDom = typeof incoming.priorDom === "boolean" ? incoming.priorDom : !!current.priorDom;
       return normalizeItem(base, {
         ...current,
-        wantDom: nextWantDom,
-        priorDom: incomingPriorDom,
-        testDom: typeof incoming.testDom === "boolean" ? incoming.testDom : undefined,
+        wantDom: validScore(incoming.wantDom),
+        priorDom: incoming.priorDom === true,
         doneTogether: mergedDoneTogether,
-        afterDom: hasAfter ? incomingScore(incoming.afterDom) : validScore(current.afterDom)
-      }, { legacyFive:!sourceSupportsFantasy, legacyFour:!sourceSupportsFavorite });
+        afterDom: validScore(incoming.afterDom)
+      });
     });
 
-    if (!Array.isArray(payload) && payload.safety && typeof payload.safety === "object") {
-      safetyMergeResult = {
-        ...mergeSafetyPrudent(getSafety(), payload.safety),
-        present:true
-      };
+    if (payload.safety && typeof payload.safety === "object") {
+      safetyMergeResult = { ...mergeSafetyPrudent(getSafety(), payload.safety), present:true };
       if (safetyMergeResult.changed) {
         localStorage.setItem(SAFETY_KEY, JSON.stringify(safetyMergeResult.merged));
         applySafety(safetyMergeResult.merged);
@@ -3565,24 +3309,17 @@ function importChecklistJson(raw) {
     if (sharedPromoted) {
       const commonTime = modifiedScopes.common ? new Date(modifiedScopes.common).getTime() : NaN;
       const sourceTime = new Date(scopeModifiedAt).getTime();
-      if (!Number.isFinite(commonTime) || (Number.isFinite(sourceTime) && sourceTime > commonTime)) {
-        modifiedScopes.common = scopeModifiedAt;
-      }
+      if (!Number.isFinite(commonTime) || (Number.isFinite(sourceTime) && sourceTime > commonTime)) modifiedScopes.common = scopeModifiedAt;
     }
     saveModifiedScopes();
 
-    // L'état local est maintenant une combinaison de plusieurs sources.
-    // On ne fait jamais reculer la date globale à cause d'un import individuel.
     const localTime = lastModifiedAt ? new Date(lastModifiedAt).getTime() : NaN;
     const incomingTime = new Date(scopeModifiedAt).getTime();
     if (!Number.isFinite(localTime) || (Number.isFinite(incomingTime) && incomingTime > localTime)) {
       lastModifiedAt = scopeModifiedAt;
       localStorage.setItem(LAST_MODIFIED_KEY, lastModifiedAt);
     }
-
-    if (safetyMergeResult.changed) {
-      markModified("common");
-    }
+    if (safetyMergeResult.changed) markModified("common");
   }
 
   rebuildItemIndexes();
@@ -3593,18 +3330,17 @@ function importChecklistJson(raw) {
   renderSessionPanel();
   render();
   renderQuickFilters();
-
+  updateCompatibilityIndicator();
   return {
     updated,
     backupType,
-    exportedByRole: !Array.isArray(payload) && ["sub","dom"].includes(payload.exportedByRole)
+    exportedByRole: ["sub","dom"].includes(payload.exportedByRole)
       ? payload.exportedByRole
       : (backupType === "sub" || backupType === "dom" ? backupType : null),
-    exportedAt: !Array.isArray(payload) && typeof payload.exportedAt === "string" ? payload.exportedAt : null,
+    exportedAt: typeof payload.exportedAt === "string" ? payload.exportedAt : null,
     lastModifiedAt: incomingRelevantModifiedAt(payload, backupType) || null,
-    appVersion: !Array.isArray(payload) && typeof payload.appVersion === "string" ? payload.appVersion : null,
-    safetyMerged: backupType !== "full" && safetyMergeResult.present,
-    safetyConflicts: backupType !== "full" ? [...safetyMergeResult.conflicts] : []
+    appVersion: typeof payload.appVersion === "string" ? payload.appVersion : APP_VERSION,
+    safetyConflicts: backupType !== "full" ? [...(safetyMergeResult.conflicts || [])] : []
   };
 }
 
@@ -3617,74 +3353,55 @@ importJsonBtn.addEventListener("click", () => {
   importJsonFile.click();
 });
 
-
 importJsonFile.addEventListener("change", async () => {
   if (readOnly) return;
   const file = importJsonFile.files && importJsonFile.files[0];
   if (!file) return;
-  // Fige d’abord les éventuelles dernières modifications du formulaire de sécurité
-  // afin que la fusion avec la sauvegarde parte bien de l’état local actuel.
   flushSafetySave();
 
   try {
-    const raw = await file.text();
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") throw new Error(t("invalidBackup"));
-
-    const incomingVariant = !Array.isArray(parsed) && typeof parsed.variantId === "string" ? parsed.variantId : "";
-    if ((incomingVariant && incomingVariant !== BACKUP_VARIANT_ID) || (!incomingVariant && !ALLOW_UNTAGGED_BACKUPS)) {
-      throw new Error(currentLang === "fr"
-        ? "Cette sauvegarde appartient à une autre checklist. Aucune donnée n’a été importée."
-        : "This backup belongs to a different checklist. No data was imported.");
+    const parsed = JSON.parse(await file.text());
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed) || parsed.version !== 1 || parsed.variantId !== BACKUP_VARIANT_ID) {
+      throw new Error(currentLang === "fr" ? "Sauvegarde incompatible avec cette checklist." : "Backup incompatible with this checklist.");
     }
-
     const backupType = normalizeBackupType(parsed);
-    const importedItems = Array.isArray(parsed) ? parsed : parsed.items;
-    if (!Array.isArray(importedItems)) {
-      throw new Error(currentLang === "fr"
-        ? "La sauvegarde ne contient pas de liste de pratiques."
-        : "The backup does not contain a practice list.");
-    }
+    if (!backupType || !Array.isArray(parsed.items)) throw new Error(t("invalidBackup"));
 
-    const ok = window.confirm(roleBackupConfirmationText(backupType, importedItems.length, parsed));
-    if (!ok) {
-      randomResult.innerHTML = `<strong>${t("restoreCancelled")}</strong> ${t("noDataChanged")}`;
+    if (!window.confirm(roleBackupConfirmationText(backupType, parsed.items.length, parsed))) {
+      randomResult.innerHTML = currentLang === "fr"
+        ? "<strong>Restauration annulée.</strong> Aucune donnée n’a été modifiée."
+        : "<strong>Restore cancelled.</strong> No data was changed.";
       return;
     }
 
     const result = importChecklistJson(parsed);
     const label = backupTypeLabel(result.backupType);
-
     setLastExchange({
       type:"import",
       backupType:result.backupType,
       role:result.exportedByRole,
       exportedAt:result.exportedAt,
       lastModifiedAt:result.lastModifiedAt,
-      appVersion:result.appVersion || ""
+      appVersion:result.appVersion
     });
 
     const when = formatDateTime(result.lastModifiedAt || result.exportedAt);
     const mergeText = currentLang === "fr"
-      ? (result.backupType === "full"
-          ? "restauration complète"
-          : "fusion ciblée + sécurité, sans modifier l’autre rôle")
-      : (result.backupType === "full"
-          ? "full restore"
-          : "targeted merge + safety, without changing the other role");
-
-    const conflictText = result.safetyConflicts && result.safetyConflicts.length
+      ? (result.backupType === "full" ? "restauration complète" : "fusion ciblée + sécurité, sans modifier l’autre rôle")
+      : (result.backupType === "full" ? "full restore" : "targeted merge + safety, without changing the other role");
+    const conflictText = result.safetyConflicts.length
       ? (currentLang === "fr"
           ? ` · ⚠️ ${result.safetyConflicts.length} conflit(s) sécurité : valeur locale conservée`
           : ` · ⚠️ ${result.safetyConflicts.length} safety conflict(s): local value kept`)
       : "";
 
     randomResult.innerHTML = currentLang === "fr"
-      ? `<strong>${label} restaurée :</strong> ${practiceCountText(result.updated)} · ${mergeText}${conflictText} · modifiée ${when} · ${esc(result.appVersion || t("oldVersion"))}.`
-      : `<strong>${label} restored:</strong> ${practiceCountText(result.updated)} · ${mergeText}${conflictText} · modified ${when} · ${esc(result.appVersion || t("oldVersion"))}.`;
+      ? `<strong>${label} restaurée :</strong> ${practiceCountText(result.updated)} · ${mergeText}${conflictText} · modifiée ${when} · ${esc(result.appVersion)}.`
+      : `<strong>${label} restored:</strong> ${practiceCountText(result.updated)} · ${mergeText}${conflictText} · modified ${when} · ${esc(result.appVersion)}.`;
   } catch (err) {
     console.error(err);
-    randomResult.innerHTML = `<strong>${t("restoreImpossible")}</strong> ${esc(err && err.message ? err.message : t("invalidBackup"))}`;
+    const prefix = currentLang === "fr" ? "Restauration impossible :" : "Restore failed:";
+    randomResult.innerHTML = `<strong>${prefix}</strong> ${esc(err && err.message ? err.message : t("invalidBackup"))}`;
   }
 });
 
@@ -3792,10 +3509,9 @@ function buildBackupPayload(type) {
   }
 
   const payload = {
-    version:28,
+    version:1,
     appVersion:APP_VERSION,
     variantId:BACKUP_VARIANT_ID,
-    scoreSchema:SCORE_SCHEMA_VALUE,
     backupType:type,
     exportedAt,
     lastModifiedAt:scopeModifiedAt,

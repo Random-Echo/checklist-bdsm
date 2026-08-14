@@ -1,65 +1,42 @@
-CHECKLISTS D/s — v130 — OPTIMISATION EXÉCUTION / RÉACTION / REFRESH
+CHECKLISTS D/s — v131 — BASE NETTOYÉE
 
+État du projet
+- 3 pages : index.html, maitresse-soumis.html et maitre-soumise.html.
+- 600 pratiques exactement dans chaque checklist.
+- 39 catégories, dont « Dirty talk / jeu verbal » (13 pratiques).
+- Niveaux : 100 Débutant + 200 Confirmé + 300 Avancé = 600.
+- Homme = bleu et toujours à gauche dans les paires de rôles.
+- Femme = prune et toujours à droite.
+- La couleur générale de chaque dynamique indique la personne dominante.
+- Tous les fichiers sont à la racine pour GitHub Pages.
 
-Optimisations v130 :
-- catalogues et moteur chargés avec defer depuis le <head> : téléchargement lancé pendant le parsing HTML ;
-- stockage local des réponses rendu sparse : seules les pratiques réellement renseignées sont sérialisées ;
-- sauvegardes automatiques déplacées hors du chemin critique du clic/de la frappe via requestIdleCallback (fallback temporisé) ;
-- flush garanti lors de pagehide / passage en arrière-plan ;
-- index Set pour la sélection de séance au lieu de recherches Array.includes répétées ;
-- réutilisation de l’index par catégorie lors des rendus, sans recréer une Map complète à chaque filtre ;
-- caches DOM réutilisés pour la synchronisation des hauteurs ;
-- suivi de catégorie mobile sans scan complet des lignes à chaque scroll ;
-- listeners de scroll passifs ;
-- suppression de rendus/calculs redondants au démarrage.
+Structure
+- index.html : accueil et choix de la dynamique.
+- maitresse-soumis.html : Checklist Femdom 600 — Maîtresse & Soumis.
+- maitre-soumise.html : Checklist Maledom 600 — Maître & Soumise.
+- checklist.css : styles communs.
+- site-bootstrap.js : langue + confirmation 18+ communes.
+- checklist-engine.js : moteur fonctionnel unique.
+- maitresse-soumis.js : catalogue et traductions Maîtresse & Soumis.
+- maitre-soumise.js : catalogue et traductions Maître & Soumise.
 
-État actuel :
-- 3 pages : index.html, maitresse-soumis.html et maitre-soumise.html ;
-- 600 pratiques exactement dans chaque checklist ;
-- 39 catégories, dont « Dirty talk / jeu verbal » (13 pratiques) ;
-- niveaux : 100 Débutant + 200 Confirmé + 300 Avancé = 600 ;
-- homme = bleu et toujours à gauche dans les paires de rôles ;
-- femme = prune et toujours à droite ;
-- la couleur générale de chaque dynamique indique la personne dominante ;
-- tous les fichiers sont placés à la racine pour le déploiement GitHub Pages.
+Nettoyage v131
+- Suppression des migrations d’anciens scores, champs, IDs, catégories, colonnes et réglages aléatoires.
+- Suppression des anciennes clés Femdom communes au site.
+- Suppression de la compatibilité avec les sauvegardes non typées et les anciens formats de sauvegarde.
+- Suppression de la liste temporaire des IDs retirés utilisée par l’index.
+- Sauvegardes JSON reparties sur un schéma propre version 1.
+- Suppression des traductions devenues orphelines.
+- CSS consolidé : déclarations identiques écrasées plus loin supprimées et commentaires historiques retirés.
+- Conservation des optimisations de réaction, stockage sparse, cache DOM, scroll mobile et chargement defer.
 
-Corrections v129 :
-- audit des trois pages, des deux catalogues, des traductions, des catégories, des IDs et des références locales ;
-- correction du favicon de Maître & Soumise : couronne bleue au lieu de prune ;
-- neuf pratiques réellement remplacées en v128 reçoivent désormais de nouveaux IDs (609 à 617), afin qu’une ancienne réponse ne puisse jamais être rattachée silencieusement à une pratique différente ;
-- les pratiques seulement déplacées ou reformulées sans changement de sens conservent leur ID ;
-- l’index ignore les anciens IDs retirés dans son compteur tant qu’une checklist n’a pas encore compacté son stockage local ;
-- cache-busting, badges, titres et moteur passés en v129.
+Sauvegardes
+- Une sauvegarde créée avant la v131 n’est volontairement plus prise en charge.
+- Les nouvelles sauvegardes v131 portent version: 1 et l’identifiant de leur checklist.
+- Les stockages locaux Maîtresse & Soumis et Maître & Soumise restent séparés.
 
-Structure :
-- index.html : accueil et choix de la dynamique
-- maitresse-soumis.html : Checklist Femdom 600 — Maîtresse & Soumis
-- maitre-soumise.html : Checklist Maledom 600 — Maître & Soumise
-- checklist.css : styles communs
-- site-bootstrap.js : langue + confirmation 18+ communes
-- checklist-engine.js : moteur fonctionnel unique
-- maitresse-soumis.js : catalogue et traductions Maîtresse & Soumis
-- maitre-soumise.js : catalogue et traductions Maître & Soumise
-
-Stockages distincts :
-- femdomChecklist... : Maîtresse & Soumis
-- maledomChecklist... : Maître & Soumise
-La langue et la confirmation 18+ sont communes au site.
-
-Compatibilité historique :
-- les anciens noms de catégories restent migrés dans la configuration lorsque nécessaire ;
-- les anciens fichiers domina-soumis.html / domina-soumis.js ne font plus partie du site ;
-- les anciennes réponses portant sur des IDs retirés sont ignorées plutôt que réaffectées à une nouvelle pratique.
-
-Optimisations v127 conservées :
-- catalogues allégés ;
-- caches DOM pour les lignes et catégories ;
-- scroll mobile incrémental ;
-- écritures localStorage regroupées ;
-- redimensionnement sans reconstruction complète tant que le mode responsive ne change pas.
-
-Responsive v126 conservé :
-- accueil compact sur iPhone portrait et paysage ;
-- en-tête iPhone compact ;
-- mode paysage dédié avec colonne Catégorie retirée de la zone fixe ;
-- correction de la hauteur des lignes en paysage.
+Responsive conservé
+- Accueil compact sur iPhone portrait et paysage.
+- En-tête iPhone compact.
+- Mode paysage dédié avec colonne Catégorie retirée de la zone fixe.
+- Hauteur des lignes optimisée en paysage.
