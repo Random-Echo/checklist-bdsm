@@ -1,4 +1,4 @@
-CHECKLISTS D/s — v112 — VERSION FINALE AUDITÉE
+CHECKLISTS D/s — v113 — VERSION FINALE AUDITÉE
 
 Structure :
 - index.html : accueil et choix de la dynamique
@@ -21,7 +21,7 @@ Compatibilité :
 - les nouvelles sauvegardes sont identifiées par variante ;
 - les imports croisés entre variantes sont refusés.
 
-Audit final v112 :
+Audit final v113 :
 - correction de la grille d’en-tête à 6 contrôles (Accueil, rôle, langue, aide, autre rôle, lecture seule) ;
 - correction du chevauchement possible EN / Aide sur PC et 21:9 ;
 - alignement sécurité 21:9 conservé ;
