@@ -5037,3 +5037,15 @@ body[data-checklist-id="maitre-soumise"] .table-shell {
   header .title-actions > .view-toggle,
   header .title-actions > .readonly-toggle { font-size:7px !important; }
 }
+
+
+/* =========================================================
+   v126 — audit global : correction hauteur des lignes en paysage
+   .left-row est un enfant d'un flex en colonne : un flex-basis égal
+   à la largeur fixe transformait chaque pratique en ligne de 180 px.
+   ========================================================= */
+@media (orientation:landscape) and (max-height:520px) and (max-width:1100px) {
+  .left-row {
+    flex-basis:auto !important;
+  }
+}

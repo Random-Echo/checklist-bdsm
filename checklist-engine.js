@@ -3,10 +3,15 @@ const CHECKLIST_VARIANT = window.CHECKLIST_VARIANT;
 const CHECKLIST_DATA = window.CHECKLIST_DATA;
 if (!CHECKLIST_VARIANT || !CHECKLIST_DATA) throw new Error("Checklist configuration missing.");
 const initialItems = CHECKLIST_DATA.items;
+// v127 — l’ordre du catalogue est la numérotation d’affichage.
+// Les fichiers de données n’ont donc plus besoin de répéter displayIndex 600 fois.
+for (let i = 0; i < initialItems.length; i++) {
+  if (!Number.isInteger(initialItems[i].displayIndex)) initialItems[i].displayIndex = i + 1;
+}
 const categoryColors = CHECKLIST_DATA.categoryColors;
-// v125 — moteur commun optimisé : catalogue statique compact, rendu en une passe,
-// colonnes et sélecteurs DOM mis en cache, métriques du tirage calculées en une passe.
-const APP_VERSION = "v125";
+// v127 — optimisation sans changement fonctionnel : payload catalogue allégé,
+// accès DOM mis en cache, scroll mobile incrémental et écritures de sécurité regroupées.
+const APP_VERSION = "v127";
 
 const LANG_KEY = window.CHECKLIST_SITE.languageKey;
 const LEGACY_LANG_KEY = window.CHECKLIST_SITE.legacyLanguageKey;
@@ -511,6 +516,12 @@ try {
 let itemsById = new Map();
 let itemsByCategory = new Map();
 let searchBaseById = new Map();
+// Caches du DOM courant : reconstruits uniquement après un render complet.
+let leftRowById = new Map();
+let rightRowById = new Map();
+let categorySectionByName = new Map();
+let mobileCategoryCandidates = [];
+let mobileCategoryIndex = 0;
 
 function compactUserState(item) {
   return {
@@ -1489,8 +1500,9 @@ function hasActiveFiltering() {
 }
 
 function syncSingleRowHeight(id) {
-  const leftRow = leftTable.querySelector(`[data-row-id="${id}"]`);
-  const rightRow = rightTable.querySelector(`[data-row-id="${id}"]`);
+  const key = Number(id);
+  const leftRow = leftRowById.get(key);
+  const rightRow = rightRowById.get(key);
   if (!leftRow || !rightRow) return;
 
   leftRow.style.height = "";
@@ -1507,8 +1519,8 @@ function refreshItemRow(item) {
     return;
   }
 
-  const leftRow = leftTable.querySelector(`[data-row-id="${item.id}"]`);
-  const rightRow = rightTable.querySelector(`[data-row-id="${item.id}"]`);
+  const leftRow = leftRowById.get(Number(item.id));
+  const rightRow = rightRowById.get(Number(item.id));
 
   if (!leftRow || !rightRow) {
     render();
@@ -1925,23 +1937,22 @@ function categoryProgressTitle(categoryName, completion) {
 function refreshCategoryProgress(categoryName) {
   const completion = categoryCompletion(categoryName);
   const title = categoryProgressTitle(categoryName, completion);
-  leftTable.querySelectorAll(".section-left[data-category]").forEach(section => {
-    if (section.dataset.category !== categoryName) return;
-    const pill = section.querySelector(".category-progress");
-    if (!pill) return;
-    pill.textContent = `${completion.filled}/${completion.total}`;
-    pill.title = title;
-    pill.setAttribute("aria-label", title);
-    pill.classList.toggle("complete", completion.total > 0 && completion.filled === completion.total);
-    pill.classList.toggle("empty", completion.filled === 0);
-  });
+  const section = categorySectionByName.get(categoryName);
+  if (!section) return;
+  const pill = section.querySelector(".category-progress");
+  if (!pill) return;
+  pill.textContent = `${completion.filled}/${completion.total}`;
+  pill.title = title;
+  pill.setAttribute("aria-label", title);
+  pill.classList.toggle("complete", completion.total > 0 && completion.filled === completion.total);
+  pill.classList.toggle("empty", completion.filled === 0);
 }
 
 function categoryScoreState(categoryName) {
   const field = categoryRoleField();
   const maxLevel = experienceMaxLevel();
-  const values = items
-    .filter(x => x.category === categoryName && Number(x.level || 3) <= maxLevel)
+  const values = (itemsByCategory.get(categoryName) || [])
+    .filter(x => Number(x.level || 3) <= maxLevel)
     .map(x => Number.isInteger(x[field]) ? x[field] : null);
   if (!values.length || values.every(v => v === null)) return { kind:"unknown", value:null };
   const first = values[0];
@@ -2289,6 +2300,18 @@ function render() {
 
   leftTable.innerHTML = leftHtml;
   rightTable.innerHTML = rightHtml;
+
+  leftRowById = new Map([...leftTable.querySelectorAll(".left-row[data-row-id]")]
+    .map(row => [Number(row.dataset.rowId), row]));
+  rightRowById = new Map([...rightTable.querySelectorAll(".right-row[data-row-id]")]
+    .map(row => [Number(row.dataset.rowId), row]));
+  categorySectionByName = new Map([...leftTable.querySelectorAll(".section-left[data-category]")]
+    .map(section => [section.dataset.category, section]));
+  mobileCategoryCandidates = MOBILE_MQ.matches
+    ? [...leftTable.querySelectorAll(".section-left[data-category], .left-row[data-category]")]
+    : [];
+  mobileCategoryIndex = 0;
+
   empty.classList.toggle("hidden", visibleCount !== 0);
 
   updateStats(visibleCount);
@@ -2305,29 +2328,33 @@ function render() {
 function updateMobileCategoryBar() {
   if (!MOBILE_MQ.matches) return;
 
-  const allCandidates = [...leftTable.querySelectorAll(".section-left[data-category], .left-row[data-category]")];
-  const hasRows = allCandidates.some(el => el.classList.contains("left-row"));
-  const sections = hasRows ? null : allCandidates;
-  mobileCategoryBar.classList.toggle("categories-only", !hasRows && allCandidates.length > 0);
-  const candidates = hasRows ? allCandidates : sections;
+  const candidates = mobileCategoryCandidates;
+  const hasRows = candidates.some(el => el.classList.contains("left-row"));
+  mobileCategoryBar.classList.toggle("categories-only", !hasRows && candidates.length > 0);
 
   if (!candidates.length) {
     mobileCategoryText.textContent = t("noResults");
     mobileCategoryDot.style.background = "#9aa0a6";
     mobileCategoryBar.style.borderLeftColor = "#9aa0a6";
+    mobileCategoryIndex = 0;
     return;
   }
 
-  const scrollTop = tableBody.scrollTop;
-  let current = candidates[0];
-  for (const el of candidates) {
-    if (el.offsetTop + el.offsetHeight > scrollTop + 2) {
-      current = el;
-      break;
-    }
-    current = el;
-  }
+  const scrollTop = tableBody.scrollTop + 2;
+  let index = Math.min(mobileCategoryIndex, candidates.length - 1);
 
+  // Le scroll est presque toujours local : on avance/revient depuis le dernier élément
+  // au lieu de reparcourir jusqu’à 600 lignes à chaque frame.
+  while (index + 1 < candidates.length &&
+         candidates[index].offsetTop + candidates[index].offsetHeight <= scrollTop) {
+    index++;
+  }
+  while (index > 0 && candidates[index].offsetTop > scrollTop) {
+    index--;
+  }
+  mobileCategoryIndex = index;
+
+  const current = candidates[index];
   const cat = current.dataset.category || "";
   const color = categoryColors[cat] || "#9aa0a6";
   mobileCategoryText.textContent = cat ? localizedCategory(cat) : t("category");
@@ -3180,12 +3207,30 @@ tableBody.addEventListener("click", (e) => {
 }, true);
 
 
+let safetySaveTimer = null;
+let safetyDirty = false;
+function flushSafetySave() {
+  clearTimeout(safetySaveTimer);
+  safetySaveTimer = null;
+  if (!safetyDirty) return;
+  // safetyDirty ne peut être positionné que pendant un mode éditable.
+  // On sauvegarde donc même si Lecture seule a été activée entre-temps.
+  safetyDirty = false;
+  markModified("common");
+  localStorage.setItem(SAFETY_KEY, JSON.stringify(getSafety()));
+}
+function scheduleSafetySave() {
+  if (readOnly) return;
+  safetyDirty = true;
+  clearTimeout(safetySaveTimer);
+  safetySaveTimer = setTimeout(flushSafetySave, 140);
+}
 document.querySelectorAll(".safety input,.safety select,.safety textarea").forEach(el => {
-  el.addEventListener("input", () => {
-    if (readOnly) return;
-    markModified("common");
-    localStorage.setItem(SAFETY_KEY, JSON.stringify(getSafety()));
-  });
+  el.addEventListener("input", scheduleSafetySave);
+});
+window.addEventListener("pagehide", flushSafetySave);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") flushSafetySave();
 });
 
 let mobileCategoryRaf = 0;
@@ -3198,11 +3243,25 @@ tableBody.addEventListener("scroll", () => {
 });
 
 let resizeTimer = null;
+let lastMobileLayout = MOBILE_MQ.matches;
 window.addEventListener("resize", () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
-    renderColumnControls();
-    render();
+    const mobileLayout = MOBILE_MQ.matches;
+    if (mobileLayout !== lastMobileLayout) {
+      lastMobileLayout = mobileLayout;
+      lastHeadsSignature = "";
+      lastGeometrySignature = "";
+      renderColumnControls();
+      render();
+      return;
+    }
+    // Même géométrie logique : le CSS gère la largeur. On resynchronise seulement
+    // les hauteurs, sans reconstruire potentiellement des centaines de lignes.
+    requestAnimationFrame(() => {
+      syncRowHeights();
+      updateMobileCategoryBar();
+    });
   }, 80);
 });
 
@@ -3490,6 +3549,9 @@ importJsonFile.addEventListener("change", async () => {
   if (readOnly) return;
   const file = importJsonFile.files && importJsonFile.files[0];
   if (!file) return;
+  // Fige d’abord les éventuelles dernières modifications du formulaire de sécurité
+  // afin que la fusion avec la sauvegarde parte bien de l’état local actuel.
+  flushSafetySave();
 
   try {
     const raw = await file.text();
@@ -3592,6 +3654,9 @@ resetChecklistBtn.addEventListener("click", () => {
   markModified(["sub","dom","common"]);
   save(false);
 
+  clearTimeout(safetySaveTimer);
+  safetySaveTimer = null;
+  safetyDirty = false;
   localStorage.removeItem(SAFETY_KEY);
   clearSafetyForm();
 
@@ -3682,6 +3747,7 @@ function buildBackupPayload(type) {
 
 
 function exportBackup(type) {
+  flushSafetySave();
   clearTimeout(saveTimer);
   save(false);
 
@@ -3742,6 +3808,5 @@ renderRoleUI();
 renderColumnControls();
 renderQuickFilters();
 renderSessionPanel();
-renderHeads();
 render();
 updateCompatibilityIndicator();
