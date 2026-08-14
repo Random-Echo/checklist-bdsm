@@ -1,24 +1,25 @@
-CHECKLISTS D/s — v119 — VERSION AUDITÉE
+CHECKLISTS D/s — v120 — VERSION AUDITÉE
 
 Structure :
+Tous les fichiers sont placés à la racine du site pour éviter les oublis de sous-dossiers lors du déploiement GitHub Pages.
 - index.html : accueil et choix de la dynamique
 - maitresse-soumis.html : Checklist Femdom 600 — Maîtresse & Soumis
 - maitre-soumise.html : Checklist Maledom 600 — Maître & Soumise
-- assets/checklist.css : styles communs
-- assets/site-bootstrap.js : langue + confirmation 18+ communes
-- assets/checklist-engine.js : moteur fonctionnel unique
-- data/maitresse-soumis.js : catalogue et traductions Maîtresse & Soumis
-- data/maitre-soumise.js : catalogue et traductions Maître & Soumise
+- checklist.css : styles communs
+- site-bootstrap.js : langue + confirmation 18+ communes
+- checklist-engine.js : moteur fonctionnel unique
+- maitresse-soumis.js : catalogue et traductions Maîtresse & Soumis
+- maitre-soumise.js : catalogue et traductions Maître & Soumise
 
-Il n’existe plus de fichier domina-soumis.html ni data/domina-soumis.js.
+Il n’existe plus de fichier domina-soumis.html ni domina-soumis.js.
 
 Stockages distincts :
 - femdomChecklist... : Maîtresse & Soumis
 - maledomChecklist... : Maître & Soumise
 La langue et la confirmation 18+ sont communes au site.
 
-Audit v119 :
-- renommage définitif des fichiers Domina → Maîtresse : maitresse-soumis.html et data/maitresse-soumis.js ;
+Audit v120 :
+- renommage définitif des fichiers Domina → Maîtresse : maitresse-soumis.html et maitresse-soumis.js ;
 - ancienne page domina-soumis.html supprimée, sans redirection ;
 - identifiant de variante Maîtresse & Soumis harmonisé en maitresse-soumis ;
 - en-tête iPhone forcé sur exactement deux lignes :
@@ -28,5 +29,5 @@ Audit v119 :
 - responsive PC réorganisé par plages de largeur au lieu de comprimer les boutons ;
 - accueil mobile converti en mise en page plein viewport : les deux cartes, le titre, le sous-titre, l’avertissement de stockage et le pied de page tiennent sans scroll ;
 - mode encore plus compact activé automatiquement sur les petits écrans de faible hauteur ;
-- moteur, badges, guides et cache-busting harmonisés en v119 ;
+- moteur, badges, guides et cache-busting harmonisés en v120 ;
 - catalogues, risques, IDs, niveaux, réponses et logique fonctionnelle conservés.

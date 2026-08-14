@@ -4,9 +4,9 @@ const CHECKLIST_DATA = window.CHECKLIST_DATA;
 if (!CHECKLIST_VARIANT || !CHECKLIST_DATA) throw new Error("Checklist configuration missing.");
 const initialItems = CHECKLIST_DATA.items;
 const categoryColors = CHECKLIST_DATA.categoryColors;
-// v119 — moteur commun optimisé : catalogue statique compact, rendu en une passe,
+// v120 — moteur commun optimisé : catalogue statique compact, rendu en une passe,
 // colonnes et sélecteurs DOM mis en cache, métriques du tirage calculées en une passe.
-const APP_VERSION = "v119";
+const APP_VERSION = "v120";
 
 const LANG_KEY = window.CHECKLIST_SITE.languageKey;
 const LEGACY_LANG_KEY = window.CHECKLIST_SITE.legacyLanguageKey;
