@@ -9,9 +9,9 @@ for (let i = 0; i < initialItems.length; i++) {
   if (!Number.isInteger(initialItems[i].displayIndex)) initialItems[i].displayIndex = i + 1;
 }
 const categoryColors = CHECKLIST_DATA.categoryColors;
-// v127 — optimisation sans changement fonctionnel : payload catalogue allégé,
-// accès DOM mis en cache, scroll mobile incrémental et écritures de sécurité regroupées.
-const APP_VERSION = "v128";
+// v130 — moteur optimisé : stockage sparse, sauvegardes hors chemin critique,
+// caches DOM/session, rendu par catégories indexées et chargement anticipé via defer.
+const APP_VERSION = "v130";
 
 const LANG_KEY = window.CHECKLIST_SITE.languageKey;
 const LEGACY_LANG_KEY = window.CHECKLIST_SITE.legacyLanguageKey;
@@ -520,7 +520,10 @@ let searchBaseById = new Map();
 let leftRowById = new Map();
 let rightRowById = new Map();
 let categorySectionByName = new Map();
+let syncLeftRows = [];
+let syncRightRows = [];
 let mobileCategoryCandidates = [];
+let mobileCategoryHasRows = false;
 let mobileCategoryIndex = 0;
 
 function compactUserState(item) {
@@ -550,8 +553,21 @@ function compactLocalUserState(item) {
   return state;
 }
 
+function hasLocalUserState(item) {
+  return Number.isInteger(item.wantSub) || Number.isInteger(item.wantDom) ||
+    !!item.priorSub || !!item.priorDom || !!item.doneTogether ||
+    Number.isInteger(item.afterSub) || Number.isInteger(item.afterDom) ||
+    (typeof item.notes === "string" && item.notes.length > 0);
+}
+
 function serializeLocalItems() {
-  return JSON.stringify(items.map(compactLocalUserState));
+  // Le stockage local ne contient que les pratiques réellement renseignées.
+  // Les pratiques absentes sont reconstruites depuis le catalogue au chargement.
+  const saved = [];
+  for (const item of items) {
+    if (hasLocalUserState(item)) saved.push(compactLocalUserState(item));
+  }
+  return JSON.stringify(saved);
 }
 
 function rebuildItemIndexes() {
@@ -591,6 +607,7 @@ try {
 } catch (_) {
   sessionOrder = [];
 }
+let sessionIdSet = new Set(sessionOrder);
 sanitizeSessionForLimits(true, false);
 
 let currentRole = localStorage.getItem(ROLE_KEY) === "dom" ? "dom" : "sub";
@@ -757,6 +774,7 @@ const statTogetherEl = document.getElementById("statTogether");
 const statRatedEl = document.getElementById("statRated");
 const statStarredEl = document.getElementById("statStarred");
 const statModeEl = document.getElementById("statMode");
+const safetyFields = [...document.querySelectorAll(".safety input,.safety select,.safety textarea")];
 // v125 : le paysage iPhone utilise volontairement la géométrie mobile :
 // une seule colonne fixe (Pratique), sans colonne Catégorie.
 const MOBILE_MQ = window.matchMedia("(max-width:650px), (orientation: landscape) and (max-height:520px) and (max-width:1100px)");
@@ -1070,7 +1088,7 @@ function otherRole() {
 
 
 function applyReadOnlyToSafety() {
-  document.querySelectorAll(".safety input,.safety select,.safety textarea").forEach(el => {
+  safetyFields.forEach(el => {
     el.disabled = readOnly;
   });
   importJsonBtn.disabled = readOnly;
@@ -1281,10 +1299,15 @@ function categoryTextColor(hex) {
 }
 function isInSession(itemOrId) {
   const id = typeof itemOrId === "object" ? Number(itemOrId.id) : Number(itemOrId);
-  return sessionOrder.includes(id);
+  return sessionIdSet.has(id);
+}
+
+function syncSessionIdSet() {
+  sessionIdSet = new Set(sessionOrder);
 }
 
 function saveSessionOrder(touchModified = true) {
+  syncSessionIdSet();
   if (touchModified) markModified("common");
   localStorage.setItem(SESSION_KEY, JSON.stringify(sessionOrder));
 }
@@ -1296,6 +1319,7 @@ function sanitizeSessionForLimits(persist = true, touchModified = false) {
     return item && !sessionBlockReason(item);
   });
   const changed = sessionOrder.length !== before;
+  if (changed) syncSessionIdSet();
   if (changed && persist) {
     localStorage.setItem(SESSION_KEY, JSON.stringify(sessionOrder));
     if (touchModified) markModified("common");
@@ -1464,29 +1488,65 @@ function saveModifiedScopes() {
   localStorage.setItem(MODIFIED_SCOPES_KEY, JSON.stringify(modifiedScopes));
 }
 
-function markModified(scopes = null) {
+function persistModifiedMetadata() {
+  localStorage.setItem(LAST_MODIFIED_KEY, lastModifiedAt);
+  saveModifiedScopes();
+}
+
+function markModified(scopes = null, persist = true) {
   const now = new Date().toISOString();
   lastModifiedAt = now;
-  localStorage.setItem(LAST_MODIFIED_KEY, lastModifiedAt);
 
   const list = Array.isArray(scopes) ? scopes : (scopes ? [scopes] : []);
   for (const scope of list) {
     if (["sub","dom","common"].includes(scope)) modifiedScopes[scope] = now;
   }
-  if (list.length) saveModifiedScopes();
+  if (persist) persistModifiedMetadata();
 }
 
 function save(touchModified = true, scopes = null) {
-  if (touchModified) markModified(scopes);
+  if (touchModified) markModified(scopes, false);
+  persistModifiedMetadata();
   localStorage.setItem(STORAGE_KEY, serializeLocalItems());
   localStorage.setItem(SCORE_SCHEMA_KEY, SCORE_SCHEMA_VALUE);
 }
 
 let saveTimer = null;
+let saveIdleHandle = null;
+let pendingSave = false;
+
+function cancelScheduledSave() {
+  if (saveTimer !== null) clearTimeout(saveTimer);
+  saveTimer = null;
+  if (saveIdleHandle !== null && typeof cancelIdleCallback === "function") cancelIdleCallback(saveIdleHandle);
+  saveIdleHandle = null;
+}
+
+function flushScheduledSave() {
+  cancelScheduledSave();
+  if (!pendingSave) return;
+  pendingSave = false;
+  save(false);
+}
+
 function scheduleSave(scopes = null) {
-  clearTimeout(saveTimer);
-  markModified(scopes);
-  saveTimer = setTimeout(() => save(false), 90);
+  markModified(scopes, false);
+  pendingSave = true;
+  cancelScheduledSave();
+
+  // Les écritures localStorage sont synchrones. On les décale hors du clic / de la frappe
+  // pour garder l'interface réactive, avec flush garanti quand la page est masquée/quittée.
+  if (typeof requestIdleCallback === "function") {
+    saveIdleHandle = requestIdleCallback(() => {
+      saveIdleHandle = null;
+      flushScheduledSave();
+    }, { timeout: 500 });
+  } else {
+    saveTimer = setTimeout(() => {
+      saveTimer = null;
+      flushScheduledSave();
+    }, 180);
+  }
 }
 
 function hasActiveFiltering() {
@@ -1773,8 +1833,8 @@ function matches(item, q = "") {
 }
 
 function syncRowHeights() {
-  const leftRows = leftTable.querySelectorAll("[data-sync]");
-  const rightRows = rightTable.querySelectorAll("[data-sync]");
+  const leftRows = syncLeftRows;
+  const rightRows = syncRightRows;
   const count = Math.min(leftRows.length, rightRows.length);
   const heights = new Array(count);
 
@@ -2254,16 +2314,16 @@ function render() {
   let rightHtml = "";
   let syncIndex = 0;
 
-  // Filtrage + regroupement en une seule passe.
-  const grouped = new Map();
-  for (const item of items) {
-    if (!matches(item, filterQuery)) continue;
-    visibleCount++;
-    if (!grouped.has(item.category)) grouped.set(item.category, []);
-    grouped.get(item.category).push(item);
-  }
-
-  for (const [categoryName, categoryItems] of grouped.entries()) {
+  // Les groupes de catégories sont statiques : on réutilise l'index construit au chargement
+  // au lieu de recréer une Map et 600 associations à chaque filtre / rendu.
+  for (const categoryName of allCatalogCategories) {
+    const sourceItems = itemsByCategory.get(categoryName) || [];
+    const categoryItems = [];
+    for (const item of sourceItems) {
+      if (matches(item, filterQuery)) categoryItems.push(item);
+    }
+    if (!categoryItems.length) continue;
+    visibleCount += categoryItems.length;
     const catColor = categoryColors[categoryName] || "#E7E7E7";
     const collapsed = isCategoryCollapsed(categoryName);
     const completion = categoryCompletion(categoryName);
@@ -2301,15 +2361,24 @@ function render() {
   leftTable.innerHTML = leftHtml;
   rightTable.innerHTML = rightHtml;
 
-  leftRowById = new Map([...leftTable.querySelectorAll(".left-row[data-row-id]")]
-    .map(row => [Number(row.dataset.rowId), row]));
-  rightRowById = new Map([...rightTable.querySelectorAll(".right-row[data-row-id]")]
-    .map(row => [Number(row.dataset.rowId), row]));
-  categorySectionByName = new Map([...leftTable.querySelectorAll(".section-left[data-category]")]
-    .map(section => [section.dataset.category, section]));
+  // Une seule collecte DOM après le rendu ; ces tableaux servent aussi à la synchronisation
+  // des hauteurs et au suivi de catégorie mobile.
+  syncLeftRows = [...leftTable.querySelectorAll("[data-sync]")];
+  syncRightRows = [...rightTable.querySelectorAll("[data-sync]")];
+  leftRowById = new Map();
+  rightRowById = new Map();
+  categorySectionByName = new Map();
+  for (const row of syncLeftRows) {
+    if (row.classList.contains("left-row")) leftRowById.set(Number(row.dataset.rowId), row);
+    else if (row.classList.contains("section-left")) categorySectionByName.set(row.dataset.category, row);
+  }
+  for (const row of syncRightRows) {
+    if (row.classList.contains("right-row")) rightRowById.set(Number(row.dataset.rowId), row);
+  }
   mobileCategoryCandidates = MOBILE_MQ.matches
-    ? [...leftTable.querySelectorAll(".section-left[data-category], .left-row[data-category]")]
+    ? syncLeftRows.filter(row => row.dataset.category)
     : [];
+  mobileCategoryHasRows = MOBILE_MQ.matches && leftRowById.size > 0;
   mobileCategoryIndex = 0;
 
   empty.classList.toggle("hidden", visibleCount !== 0);
@@ -2329,8 +2398,7 @@ function updateMobileCategoryBar() {
   if (!MOBILE_MQ.matches) return;
 
   const candidates = mobileCategoryCandidates;
-  const hasRows = candidates.some(el => el.classList.contains("left-row"));
-  mobileCategoryBar.classList.toggle("categories-only", !hasRows && candidates.length > 0);
+  mobileCategoryBar.classList.toggle("categories-only", !mobileCategoryHasRows && candidates.length > 0);
 
   if (!candidates.length) {
     mobileCategoryText.textContent = t("noResults");
@@ -2517,8 +2585,7 @@ function updateStats(visibleCount = null) {
     ? `Favoris : ${roleStats(favoriteCounts, (role, count) => `${favoriteSymbol(role)} ${roleLabel(role)} ${count}`)}`
     : `Favorites: ${roleStats(favoriteCounts, (role, count) => `${favoriteSymbol(role)} ${roleLabel(role)} ${count}`)}`;
 
-  const statMode = document.getElementById("statMode");
-  if (statMode) statMode.textContent = currentLang === "fr"
+  if (statModeEl) statModeEl.textContent = currentLang === "fr"
     ? `Parcours : ${experienceLabel()} · rôle ${roleLabel(currentRole)}${readOnly ? ` · ${t("readOnlySuffix")}` : ""}`
     : `Path: ${experienceLabel()} · ${roleLabel(currentRole)} role${readOnly ? ` · ${t("readOnlySuffix")}` : ""}`;
 
@@ -3101,11 +3168,11 @@ function syncHorizontalScroll(source, value) {
 
 rightScroll.addEventListener("scroll", () => {
   syncHorizontalScroll(rightScroll, rightScroll.scrollLeft);
-});
+}, { passive:true });
 
 bottomHScroll.addEventListener("scroll", () => {
   syncHorizontalScroll(bottomHScroll, bottomHScroll.scrollLeft);
-});
+}, { passive:true });
 
 // Défilement horizontal "clic + glisser" sur toute la zone de droite.
 // Un simple clic sur un bouton de note reste un clic normal.
@@ -3225,12 +3292,18 @@ function scheduleSafetySave() {
   clearTimeout(safetySaveTimer);
   safetySaveTimer = setTimeout(flushSafetySave, 140);
 }
-document.querySelectorAll(".safety input,.safety select,.safety textarea").forEach(el => {
+safetyFields.forEach(el => {
   el.addEventListener("input", scheduleSafetySave);
 });
-window.addEventListener("pagehide", flushSafetySave);
+window.addEventListener("pagehide", () => {
+  flushSafetySave();
+  flushScheduledSave();
+});
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "hidden") flushSafetySave();
+  if (document.visibilityState === "hidden") {
+    flushSafetySave();
+    flushScheduledSave();
+  }
 });
 
 let mobileCategoryRaf = 0;
@@ -3240,7 +3313,7 @@ tableBody.addEventListener("scroll", () => {
     mobileCategoryRaf = 0;
     updateMobileCategoryBar();
   });
-});
+}, { passive:true });
 
 let resizeTimer = null;
 let lastMobileLayout = MOBILE_MQ.matches;
@@ -3648,7 +3721,8 @@ resetChecklistBtn.addEventListener("click", () => {
   const ok = window.confirm(message);
   if (!ok) return;
 
-  clearTimeout(saveTimer);
+  cancelScheduledSave();
+  pendingSave = false;
   items = initialItems.map(base => normalizeItem(base, {}));
   rebuildItemIndexes();
   markModified(["sub","dom","common"]);
@@ -3661,6 +3735,7 @@ resetChecklistBtn.addEventListener("click", () => {
   clearSafetyForm();
 
   sessionOrder = [];
+  syncSessionIdSet();
   localStorage.removeItem(SESSION_KEY);
   randomDrawHistory.clear();
   localStorage.removeItem(RANDOM_HISTORY_KEY);
@@ -3748,7 +3823,7 @@ function buildBackupPayload(type) {
 
 function exportBackup(type) {
   flushSafetySave();
-  clearTimeout(saveTimer);
+  flushScheduledSave();
   save(false);
 
   const payload = buildBackupPayload(type);
@@ -3807,6 +3882,4 @@ renderExchangeInfo();
 renderRoleUI();
 renderColumnControls();
 renderQuickFilters();
-renderSessionPanel();
 render();
-updateCompatibilityIndicator();
