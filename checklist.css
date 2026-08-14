@@ -4082,7 +4082,7 @@ body[data-checklist-id="maitre-soumise"] .table-shell {
 
 
 /* =========================================================
-   v115 — grille d’en-tête robuste + sélecteur de rôle non compressible
+   v116 — en-tête PC robuste : aucun bouton de rôle ne peut être rogné
    ========================================================= */
 .title-actions > .home-button { grid-area:home; }
 .title-actions > .role-switch { grid-area:role; }
@@ -4090,36 +4090,56 @@ body[data-checklist-id="maitre-soumise"] .table-shell {
 .title-actions > .help-button { grid-area:help; }
 .title-actions > .view-toggle { grid-area:view; }
 .title-actions > .readonly-toggle { grid-area:readonly; }
-.role-switch { min-width:250px; }
-.role-choice { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding-inline:10px; }
 
-@media (min-width:1181px) {
+.role-switch { width:100%; min-width:0; }
+.role-choice {
+  min-width:0;
+  overflow:visible;
+  text-overflow:clip;
+  white-space:nowrap;
+  padding-inline:8px;
+}
+
+/* Grand PC : titre et commandes restent sur une seule ligne. */
+@media (min-width:1361px) {
+  .title-role-row { grid-template-columns:minmax(330px,1fr) auto; }
   .title-actions {
+    width:auto;
     grid-template-areas:"home role lang help view readonly";
-    grid-template-columns:110px minmax(250px,270px) 108px 40px minmax(145px,165px) minmax(145px,165px);
+    grid-template-columns:110px 270px 108px 40px minmax(145px,165px) minmax(145px,165px);
   }
 }
-@media (max-width:1180px) and (min-width:901px) {
-  .title-role-row { grid-template-columns:1fr; }
-  .title-actions {
-    width:100%;
-    grid-template-areas:"home role lang help view readonly";
-    grid-template-columns:105px minmax(250px,1.4fr) 108px 40px minmax(145px,1fr) minmax(145px,1fr);
-  }
-}
-@media (max-width:900px) and (min-width:651px) {
-  .title-role-row { grid-template-columns:1fr; }
+
+/* PC moyen / zoom navigateur : commandes sur deux lignes plutôt que de rogner Maître/Maîtresse/Soumis/Soumise. */
+@media (max-width:1360px) and (min-width:951px) {
+  .title-role-row { grid-template-columns:1fr; gap:7px; }
   .title-actions {
     width:100%;
     grid-template-areas:
-      "home role role role lang help"
-      "view view view readonly readonly readonly";
-    grid-template-columns:repeat(6,minmax(0,1fr));
+      "home home role role role role lang lang help help help help"
+      "view view view view view view readonly readonly readonly readonly readonly readonly";
+    grid-template-columns:repeat(12,minmax(0,1fr));
+    justify-content:stretch;
   }
-  .role-switch { min-width:0; }
   .home-button,.role-switch,.language-switch,.help-button,.view-toggle,.readonly-toggle { width:100%; }
-  .language-switch { min-width:0; }
+  .language-switch,.help-button { min-width:0; }
 }
+
+/* Petite fenêtre PC / tablette horizontale : même principe, avec davantage de place pour le sélecteur de rôle. */
+@media (max-width:950px) and (min-width:651px) {
+  .title-role-row { grid-template-columns:1fr; gap:7px; }
+  .title-actions {
+    width:100%;
+    grid-template-areas:
+      "home home role role role role role role lang lang help help"
+      "view view view view view view readonly readonly readonly readonly readonly readonly";
+    grid-template-columns:repeat(12,minmax(0,1fr));
+    justify-content:stretch;
+  }
+  .home-button,.role-switch,.language-switch,.help-button,.view-toggle,.readonly-toggle { width:100%; min-width:0; }
+}
+
+/* Mobile : deux lignes compactes, sans troncature des deux rôles. */
 @media (max-width:650px) {
   .title-actions {
     grid-template-areas:
@@ -4128,4 +4148,146 @@ body[data-checklist-id="maitre-soumise"] .table-shell {
     grid-template-columns:repeat(6,minmax(0,1fr));
   }
   .role-switch { min-width:0; }
+  .role-choice { padding-inline:4px; font-size:9px; }
+}
+
+
+
+/* =========================================================
+   v117 — finition responsive : mobile compact + rôles PC sûrs
+   ========================================================= */
+
+/* Sur ordinateur, réserver une largeur confortable au sélecteur de rôle.
+   Le texte complet reste toujours visible, même avec Maîtresse / Soumise. */
+@media (min-width:1361px) {
+  .title-actions {
+    grid-template-columns:104px minmax(278px,292px) 104px 40px minmax(142px,160px) minmax(142px,160px);
+  }
+  .role-choice {
+    font-size:11px;
+    padding-inline:8px;
+  }
+}
+
+@media (max-width:1360px) and (min-width:651px) {
+  .role-switch {
+    min-width:250px;
+  }
+  .role-choice {
+    font-size:11px;
+    padding-inline:7px;
+  }
+}
+
+/* iPhone / mobile : deux lignes seulement.
+   Ligne 1 : Accueil + rôle + langue.
+   Ligne 2 : ? + Masquer/Afficher + Lecture seule. */
+@media (max-width:650px) {
+  .title-role-row {
+    display:block;
+    margin-bottom:5px;
+  }
+
+  .title-role-row h1 {
+    margin:0 0 5px;
+    font-size:14px;
+    line-height:1.12;
+  }
+
+  .title-extra { display:none; }
+
+  .title-actions {
+    display:grid;
+    width:100%;
+    grid-template-columns:36px repeat(4,minmax(0,1fr));
+    grid-template-areas:
+      "home role role role lang"
+      "help view view readonly readonly";
+    gap:3px;
+    align-items:stretch;
+  }
+
+  .home-button {
+    grid-area:home;
+    width:36px;
+    min-width:36px;
+    min-height:31px;
+    height:31px;
+    padding:0;
+  }
+  .home-button .adult-lang-fr,
+  .home-button .adult-lang-en { display:none !important; }
+  .home-button::before {
+    content:"⌂";
+    font-size:15px;
+    line-height:1;
+  }
+
+  .role-switch {
+    grid-area:role;
+    width:100%;
+    min-width:0;
+    height:31px;
+  }
+  .role-choice {
+    min-width:0;
+    min-height:31px;
+    height:31px;
+    padding-inline:3px;
+    font-size:9px;
+    line-height:1;
+    white-space:nowrap;
+  }
+
+  .language-switch {
+    grid-area:lang;
+    width:100%;
+    min-width:0;
+    height:31px;
+  }
+  .language-choice {
+    min-width:0;
+    height:31px;
+    padding:0 2px;
+    gap:0;
+  }
+  .language-choice span { display:none !important; }
+  .flag-svg {
+    width:19px;
+    height:13px;
+  }
+
+  .help-button {
+    grid-area:help;
+    width:36px;
+    min-width:36px;
+    min-height:34px;
+    height:34px;
+  }
+
+  .view-toggle {
+    grid-area:view;
+  }
+  .readonly-toggle {
+    grid-area:readonly;
+  }
+  .view-toggle,
+  .readonly-toggle {
+    width:100%;
+    min-width:0;
+    min-height:34px;
+    height:34px;
+    padding:0 5px;
+    font-size:8.7px;
+    line-height:1.05;
+    white-space:normal;
+    overflow-wrap:anywhere;
+  }
+}
+
+@media (max-width:360px) {
+  .title-role-row h1 { font-size:13px; }
+  .role-choice { font-size:8.5px; padding-inline:2px; }
+  .view-toggle,
+  .readonly-toggle { font-size:8.2px; padding-inline:3px; }
 }

@@ -4,9 +4,9 @@ const CHECKLIST_DATA = window.CHECKLIST_DATA;
 if (!CHECKLIST_VARIANT || !CHECKLIST_DATA) throw new Error("Checklist configuration missing.");
 const initialItems = CHECKLIST_DATA.items;
 const categoryColors = CHECKLIST_DATA.categoryColors;
-// v113 — moteur commun optimisé : catalogue statique compact, rendu en une passe,
+// v117 — moteur commun optimisé : catalogue statique compact, rendu en une passe,
 // colonnes et sélecteurs DOM mis en cache, métriques du tirage calculées en une passe.
-const APP_VERSION = "v113";
+const APP_VERSION = "v117";
 
 const LANG_KEY = window.CHECKLIST_SITE.languageKey;
 const LEGACY_LANG_KEY = window.CHECKLIST_SITE.legacyLanguageKey;
@@ -205,7 +205,7 @@ function setLanguage(lang, persist = true) {
   updateCompatibilityIndicator();
 }
 
-// v113 — moteur commun : chaque variante fournit son espace de stockage.
+// Moteur commun : chaque variante fournit son propre espace de stockage.
 const VARIANT_STORAGE_KEYS = Object.freeze({
   items: `${CHECKLIST_VARIANT.storageNamespace}_v1`,
   scoreSchema: `${CHECKLIST_VARIANT.storageNamespace}_scoreSchema_v2`,
@@ -1008,6 +1008,13 @@ function roleLabel(role) {
   return role === "dom" ? t("roleDom") : t("roleSub");
 }
 
+function roleColorName(role) {
+  const femaleRole = CHECKLIST_VARIANT.id === "maitre-soumise" ? "sub" : "dom";
+  const isFemale = role === femaleRole;
+  if (currentLang === "fr") return isFemale ? "prune" : "bleu";
+  return isFemale ? "plum" : "blue";
+}
+
 function canEditRole(owner) {
   if (readOnly) return false;
   return !owner || owner === currentRole;
@@ -1581,9 +1588,7 @@ function renderHeads() {
     const plainLabel = label.replace(/<br\s*\/?>/gi, " ");
     let roleDetail = "";
     if (owners.includes("sub") && owners.includes("dom")) {
-      roleDetail = currentLang === "fr"
-        ? ` — bleu : ${roleLabel("sub")} · prune : ${roleLabel("dom")}`
-        : ` — blue: ${roleLabel("sub")} · plum: ${roleLabel("dom")}`;
+      roleDetail = ` — ${roleColorName("sub")} : ${roleLabel("sub")} · ${roleColorName("dom")} : ${roleLabel("dom")}`;
     } else if (owners.length === 1) {
       roleDetail = ` — ${roleLabel(owners[0])}`;
     }

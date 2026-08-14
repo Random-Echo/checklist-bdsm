@@ -1,4 +1,4 @@
-CHECKLISTS D/s — v113 — VERSION FINALE AUDITÉE
+CHECKLISTS D/s — v117 — VERSION FINALE AUDITÉE
 
 Structure :
 - index.html : accueil et choix de la dynamique
@@ -21,11 +21,14 @@ Compatibilité :
 - les nouvelles sauvegardes sont identifiées par variante ;
 - les imports croisés entre variantes sont refusés.
 
-Audit final v113 :
-- correction de la grille d’en-tête à 6 contrôles (Accueil, rôle, langue, aide, autre rôle, lecture seule) ;
-- correction du chevauchement possible EN / Aide sur PC et 21:9 ;
-- alignement sécurité 21:9 conservé ;
-- accueil : gestion du focus, piège Tab et retour de focus des modales ;
-- carte Maître & Soumise visuellement différenciée ;
-- libellé « Maître » harmonisé ;
-- catalogues, niveaux, risques, IDs et stockages vérifiés.
+Audit v117 :
+- en-tête mobile réorganisé sur 2 lignes compactes : Accueil + rôle + langue, puis ? + affichage autre rôle + lecture seule ;
+- largeur du sélecteur de rôle renforcée sur PC pour éviter toute troncature ;
+- passe responsive et régression relancée sur les deux variantes.
+- accueil compacté sur PC afin que les deux cartes tiennent sans défilement sur les hauteurs usuelles ;
+- ordre de la carte Femdom harmonisé : Maîtresse puis Soumis ;
+- responsive de l’en-tête renforcé sur PC et fenêtres zoomées : le sélecteur Maître/Maîtresse/Soumis/Soumise ne peut plus être rogné ;
+- version du moteur, badges, cache-busting et guide harmonisés en v117 ;
+- libellés accessibles des groupes de colonnes corrigés : femme = prune, homme = bleu dans les deux dynamiques ;
+- logique des compteurs vérifiée : « renseignée » et « À compléter » concernent volontairement la préférence initiale du rôle, pas la note Après expérience ;
+- catalogues, niveaux, risques, IDs et stockages conservés.
