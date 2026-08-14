@@ -873,7 +873,7 @@ main {
 }
 
 /* =========================================================
-   MODES SOUMIS / DOMINA
+   MODES DES RÔLES
    ========================================================= */
 body[data-role="sub"] {
   --role-color:var(--sub-role-color);
@@ -908,6 +908,23 @@ body[data-checklist-id="maitre-soumise"] {
   --dom-role-accent:#5AA0C2;
   --dom-role-head:#274F62;
 }
+
+/* v115 — verrouillage explicite du code couleur par sexe.
+   Femme = prune ; homme = bleu, quel que soit le rôle BDSM. */
+body[data-checklist-id="maitre-soumise"][data-role="sub"] {
+  --role-color:#8B3F6F;
+  --role-soft:#F7EAF2;
+  --role-dark:#67294D;
+}
+body[data-checklist-id="maitre-soumise"][data-role="dom"] {
+  --role-color:#2F6F8F;
+  --role-soft:#E8F2F7;
+  --role-dark:#1E536C;
+}
+body[data-checklist-id="maitre-soumise"] .role-choice.role-sub { color:#8B3F6F !important; }
+body[data-checklist-id="maitre-soumise"] .role-choice.role-dom { color:#2F6F8F !important; }
+body[data-checklist-id="maitre-soumise"] .role-choice.role-sub.active { background:#8B3F6F !important; color:#fff !important; }
+body[data-checklist-id="maitre-soumise"] .role-choice.role-dom.active { background:#2F6F8F !important; color:#fff !important; }
 
 header {
   border-top:4px solid var(--role-color);
@@ -4065,7 +4082,7 @@ body[data-checklist-id="maitre-soumise"] .table-shell {
 
 
 /* =========================================================
-   v114 — grille d’en-tête robuste + sélecteur de rôle non compressible
+   v115 — grille d’en-tête robuste + sélecteur de rôle non compressible
    ========================================================= */
 .title-actions > .home-button { grid-area:home; }
 .title-actions > .role-switch { grid-area:role; }
