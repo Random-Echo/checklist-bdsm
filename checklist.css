@@ -4512,3 +4512,184 @@ body[data-checklist-id="maitre-soumise"] .table-shell {
   .view-toggle,
   .readonly-toggle { font-size:8px; padding-inline:2px; }
 }
+
+
+/* =========================================================
+   v123 — en-tête mobile autoritaire
+   Safari/iPhone : les 6 commandes restent toujours visibles en 2 lignes.
+   Ligne 1 : Accueil | Homme/Femme | FR/EN
+   Ligne 2 : ? | Masquer/Afficher | Lecture seule
+   ========================================================= */
+@media (max-width:650px) {
+  header .top {
+    padding:7px 8px 6px !important;
+    overflow:visible !important;
+  }
+
+  header .title-role-row {
+    display:block !important;
+    width:100% !important;
+    margin:0 !important;
+    overflow:visible !important;
+  }
+
+  header .title-role-row > h1 {
+    display:block !important;
+    width:100% !important;
+    margin:0 0 5px !important;
+    font-size:12.5px !important;
+    line-height:1.12 !important;
+  }
+
+  header .title-extra { display:none !important; }
+
+  header .title-actions {
+    display:grid !important;
+    width:100% !important;
+    min-width:0 !important;
+    min-height:67px !important;
+    height:auto !important;
+    grid-template-columns:32px repeat(11,minmax(0,1fr)) !important;
+    grid-template-rows:31px 33px !important;
+    gap:3px !important;
+    align-items:stretch !important;
+    justify-items:stretch !important;
+    justify-content:stretch !important;
+    overflow:visible !important;
+  }
+
+  /* Annule les anciennes zones nommées qui pouvaient entrer en conflit
+     avec les règles historiques encore présentes dans la feuille. */
+  header .title-actions > .home-button,
+  header .title-actions > .role-switch,
+  header .title-actions > .language-switch,
+  header .title-actions > .help-button,
+  header .title-actions > .view-toggle,
+  header .title-actions > .readonly-toggle {
+    grid-area:auto !important;
+    position:static !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    transform:none !important;
+    margin:0 !important;
+    z-index:auto !important;
+    box-sizing:border-box !important;
+  }
+
+  header .title-actions > .home-button {
+    display:inline-flex !important;
+    grid-column:1 !important;
+    grid-row:1 !important;
+    width:32px !important;
+    min-width:32px !important;
+    height:31px !important;
+    min-height:31px !important;
+    padding:0 !important;
+  }
+  header .home-button .adult-lang-fr,
+  header .home-button .adult-lang-en { display:none !important; }
+  header .home-button::before { content:"⌂" !important; font-size:15px !important; line-height:1 !important; }
+
+  header .title-actions > .role-switch {
+    display:grid !important;
+    grid-column:2 / 10 !important;
+    grid-row:1 !important;
+    width:100% !important;
+    min-width:0 !important;
+    height:31px !important;
+    min-height:31px !important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+  }
+  header .role-choice {
+    display:block !important;
+    min-width:0 !important;
+    width:100% !important;
+    height:31px !important;
+    min-height:31px !important;
+    padding:0 2px !important;
+    font-size:9px !important;
+    line-height:31px !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:clip !important;
+  }
+
+  header .title-actions > .language-switch {
+    display:inline-grid !important;
+    grid-column:10 / 13 !important;
+    grid-row:1 !important;
+    width:100% !important;
+    min-width:0 !important;
+    height:31px !important;
+    min-height:31px !important;
+    grid-template-columns:1fr 1fr !important;
+  }
+  header .language-choice {
+    display:flex !important;
+    min-width:0 !important;
+    width:100% !important;
+    height:31px !important;
+    min-height:31px !important;
+    padding:0 2px !important;
+    gap:0 !important;
+  }
+  header .language-choice span { display:none !important; }
+  header .flag-svg { width:18px !important; height:12px !important; }
+
+  header .title-actions > .help-button {
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    grid-column:1 !important;
+    grid-row:2 !important;
+    width:32px !important;
+    min-width:32px !important;
+    height:33px !important;
+    min-height:33px !important;
+    padding:0 !important;
+  }
+
+  header .title-actions > .view-toggle {
+    display:block !important;
+    grid-column:2 / 7 !important;
+    grid-row:2 !important;
+  }
+
+  header .title-actions > .readonly-toggle {
+    display:block !important;
+    grid-column:7 / 13 !important;
+    grid-row:2 !important;
+  }
+
+  header .title-actions > .view-toggle,
+  header .title-actions > .readonly-toggle {
+    width:100% !important;
+    min-width:0 !important;
+    height:33px !important;
+    min-height:33px !important;
+    padding:0 4px !important;
+    font-size:8.5px !important;
+    line-height:1.03 !important;
+    white-space:normal !important;
+    overflow:hidden !important;
+    overflow-wrap:anywhere !important;
+  }
+}
+
+@media (max-width:360px) {
+  header .top { padding-inline:6px !important; }
+  header .title-role-row > h1 { font-size:12px !important; }
+  header .title-actions {
+    grid-template-columns:30px repeat(11,minmax(0,1fr)) !important;
+    gap:2px !important;
+  }
+  header .title-actions > .home-button,
+  header .title-actions > .help-button {
+    width:30px !important;
+    min-width:30px !important;
+  }
+  header .role-choice { font-size:8.3px !important; padding-inline:1px !important; }
+  header .flag-svg { width:17px !important; height:11px !important; }
+  header .title-actions > .view-toggle,
+  header .title-actions > .readonly-toggle { font-size:8px !important; padding-inline:2px !important; }
+}

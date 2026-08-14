@@ -4,16 +4,16 @@ const CHECKLIST_DATA = window.CHECKLIST_DATA;
 if (!CHECKLIST_VARIANT || !CHECKLIST_DATA) throw new Error("Checklist configuration missing.");
 const initialItems = CHECKLIST_DATA.items;
 const categoryColors = CHECKLIST_DATA.categoryColors;
-// v122 — moteur commun optimisé : catalogue statique compact, rendu en une passe,
+// v123 — moteur commun optimisé : catalogue statique compact, rendu en une passe,
 // colonnes et sélecteurs DOM mis en cache, métriques du tirage calculées en une passe.
-const APP_VERSION = "v122";
+const APP_VERSION = "v123";
 
 const LANG_KEY = window.CHECKLIST_SITE.languageKey;
 const LEGACY_LANG_KEY = window.CHECKLIST_SITE.legacyLanguageKey;
 const CATEGORY_EN = CHECKLIST_DATA.categoryEn;
 const I18N = CHECKLIST_DATA.i18n;
 
-// v122 — convention spatiale unique : homme/bleu à gauche, femme/prune à droite.
+// v123 — convention spatiale unique : homme/bleu à gauche, femme/prune à droite.
 // Chaque variante déclare quel rôle BDSM correspond à chaque côté.
 const ROLE_VISUAL_ORDER = (() => {
   const order = Array.isArray(CHECKLIST_VARIANT.visualRoleOrder) ? CHECKLIST_VARIANT.visualRoleOrder : ["sub","dom"];
