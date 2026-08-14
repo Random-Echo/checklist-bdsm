@@ -4515,7 +4515,7 @@ body[data-checklist-id="maitre-soumise"] .table-shell {
 
 
 /* =========================================================
-   v123 — en-tête mobile autoritaire
+   v124 — en-tête mobile autoritaire
    Safari/iPhone : les 6 commandes restent toujours visibles en 2 lignes.
    Ligne 1 : Accueil | Homme/Femme | FR/EN
    Ligne 2 : ? | Masquer/Afficher | Lecture seule
@@ -4692,4 +4692,348 @@ body[data-checklist-id="maitre-soumise"] .table-shell {
   header .flag-svg { width:17px !important; height:11px !important; }
   header .title-actions > .view-toggle,
   header .title-actions > .readonly-toggle { font-size:8px !important; padding-inline:2px !important; }
+}
+
+
+/* =========================================================
+   v125 — iPhone paysage : mode travail ultra-compact
+   Objectif : maximiser la hauteur réellement disponible pour le tableau.
+   - une seule colonne fixe : Pratique (Catégorie supprimée)
+   - barre supérieure sur UNE ligne
+   - Outils & options réduit à une ligne fine
+   - actions Tout replier / Tout déplier masquées dans ce format
+   - footer masqué pendant l'utilisation
+   ========================================================= */
+@media (orientation:landscape) and (max-height:520px) and (max-width:1100px) {
+  :root {
+    /* Le moteur passe aussi en géométrie mobile dans ce media-query.
+       Ces !important rendent la largeur fixe confortable en paysage. */
+    --left-template:180px !important;
+    --left-width:180px !important;
+  }
+
+  html,
+  body {
+    width:100%;
+    height:100dvh !important;
+    min-height:100dvh !important;
+    overflow:hidden !important;
+  }
+
+  /* ---------- En-tête principal : une seule ligne ---------- */
+  header {
+    border-top-width:3px !important;
+    border-bottom-width:1px !important;
+  }
+  header .top {
+    max-width:none !important;
+    padding:2px max(5px,env(safe-area-inset-right,0px)) 2px max(5px,env(safe-area-inset-left,0px)) !important;
+  }
+  header .title-role-row {
+    display:grid !important;
+    grid-template-columns:minmax(120px,1fr) minmax(485px,560px) !important;
+    align-items:center !important;
+    gap:4px !important;
+    width:100% !important;
+    margin:0 0 2px !important;
+  }
+  header .title-role-row > h1 {
+    display:block !important;
+    min-width:0 !important;
+    margin:0 !important;
+    font-size:10px !important;
+    line-height:26px !important;
+    height:26px !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+  header .title-extra { display:none !important; }
+  header .version-badge {
+    margin-left:3px !important;
+    padding:1px 4px !important;
+    font-size:7.5px !important;
+    vertical-align:1px !important;
+  }
+
+  header .title-actions {
+    display:grid !important;
+    width:100% !important;
+    min-width:0 !important;
+    height:26px !important;
+    min-height:26px !important;
+    grid-template-areas:none !important;
+    grid-template-columns:27px minmax(145px,1.55fr) 58px 27px minmax(92px,.95fr) minmax(100px,1fr) !important;
+    grid-template-rows:26px !important;
+    gap:3px !important;
+    align-items:stretch !important;
+    overflow:visible !important;
+  }
+  header .title-actions > .home-button,
+  header .title-actions > .role-switch,
+  header .title-actions > .language-switch,
+  header .title-actions > .help-button,
+  header .title-actions > .view-toggle,
+  header .title-actions > .readonly-toggle {
+    grid-area:auto !important;
+    grid-row:1 !important;
+    position:static !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    transform:none !important;
+    width:100% !important;
+    min-width:0 !important;
+    height:26px !important;
+    min-height:26px !important;
+    margin:0 !important;
+    box-sizing:border-box !important;
+  }
+  header .title-actions > .home-button { grid-column:1 !important; padding:0 !important; }
+  header .home-button .adult-lang-fr,
+  header .home-button .adult-lang-en { display:none !important; }
+  header .home-button::before { content:"⌂" !important; font-size:13px !important; line-height:1 !important; }
+
+  header .title-actions > .role-switch {
+    grid-column:2 !important;
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+    border-radius:7px !important;
+  }
+  header .role-choice {
+    width:100% !important;
+    min-width:0 !important;
+    height:26px !important;
+    min-height:26px !important;
+    padding:0 3px !important;
+    font-size:8.5px !important;
+    line-height:1 !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:clip !important;
+  }
+
+  header .title-actions > .language-switch {
+    grid-column:3 !important;
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    border-radius:7px !important;
+  }
+  header .language-choice {
+    width:100% !important;
+    min-width:0 !important;
+    height:26px !important;
+    min-height:26px !important;
+    padding:0 !important;
+    gap:0 !important;
+  }
+  header .language-choice span { display:none !important; }
+  header .flag-svg { width:17px !important; height:11px !important; }
+
+  header .title-actions > .help-button {
+    grid-column:4 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    padding:0 !important;
+    font-size:11px !important;
+  }
+  header .title-actions > .view-toggle { grid-column:5 !important; }
+  header .title-actions > .readonly-toggle { grid-column:6 !important; }
+  header .title-actions > .view-toggle,
+  header .title-actions > .readonly-toggle {
+    padding:0 3px !important;
+    border-radius:7px !important;
+    font-size:7.7px !important;
+    line-height:1 !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+
+  /* ---------- Outils : une ligne de 25 px ---------- */
+  header .all-tools {
+    margin:0 !important;
+    border-radius:6px !important;
+  }
+  header .all-tools > summary {
+    min-height:25px !important;
+    height:25px !important;
+    padding:2px 7px !important;
+    gap:5px !important;
+    font-size:9px !important;
+    line-height:1 !important;
+  }
+  header .all-tools > summary .compat-summary {
+    max-width:42vw !important;
+    padding:2px 6px !important;
+    font-size:7.5px !important;
+    line-height:1 !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+  }
+  header .all-tools-content {
+    max-height:calc(100dvh - 60px) !important;
+    overflow:auto !important;
+    padding:4px !important;
+    gap:4px !important;
+  }
+  header .tool-section {
+    padding:5px !important;
+  }
+  header .tool-section h2 {
+    margin:0 0 4px !important;
+    font-size:10px !important;
+  }
+
+  /* ---------- Tableau : priorité absolue à la hauteur ---------- */
+  main {
+    width:100% !important;
+    max-width:none !important;
+    margin:2px 0 0 !important;
+    padding:0 max(4px,env(safe-area-inset-right,0px)) 2px max(4px,env(safe-area-inset-left,0px)) !important;
+    min-height:0 !important;
+  }
+  .table-category-actions {
+    display:none !important;
+  }
+  .mobile-category-bar {
+    display:none !important;
+  }
+  .site-footer {
+    display:none !important;
+  }
+  .bottom-scroll-row {
+    display:none !important;
+  }
+
+  .table-shell {
+    border-radius:6px !important;
+  }
+  .table-header {
+    min-height:27px !important;
+  }
+  .left-head,
+  .left-row,
+  .left-pane {
+    width:var(--left-width) !important;
+    min-width:var(--left-width) !important;
+    flex-basis:var(--left-width) !important;
+  }
+  .left-head {
+    grid-template-columns:var(--left-template) !important;
+  }
+  .left-head .head-cell,
+  .head-cell {
+    min-height:27px !important;
+    height:27px !important;
+    padding:2px 5px !important;
+    font-size:8.5px !important;
+    line-height:1 !important;
+  }
+
+  .cell {
+    padding:3px 4px !important;
+  }
+  .practice {
+    font-size:9.5px !important;
+    line-height:1.08 !important;
+  }
+  .practice-label {
+    line-height:1.08 !important;
+  }
+  .level-badge,
+  .risk-badge,
+  .compatibility-badge {
+    font-size:7px !important;
+  }
+  .session-pin-btn {
+    transform:scale(.84);
+    transform-origin:center;
+  }
+
+  .section-left,
+  .section-right,
+  .section-right-cell {
+    min-height:27px !important;
+  }
+  .section-left {
+    width:var(--left-width) !important;
+    min-width:var(--left-width) !important;
+    padding:2px 4px !important;
+    border-left-width:4px !important;
+  }
+  .section-right {
+    padding:0 !important;
+  }
+  .category-toggle {
+    min-height:23px !important;
+    gap:3px !important;
+    font-size:8px !important;
+  }
+  .section-dot { width:7px !important; height:7px !important; }
+  .category-progress {
+    min-width:34px !important;
+    padding:1px 4px !important;
+    font-size:7px !important;
+  }
+
+  .score-wrap { gap:2px !important; }
+  .score-btn.semantic-score-btn {
+    height:31px !important;
+    min-height:31px !important;
+    padding-inline:3px !important;
+    font-size:8px !important;
+  }
+  .score-btn.semantic-score-btn[data-score="0"] {
+    width:34px !important;
+    min-width:34px !important;
+    font-size:13px !important;
+  }
+  .score-btn.semantic-score-btn[data-score="1"],
+  .score-btn.semantic-score-btn[data-score="5"],
+  .score-btn.semantic-score-btn[data-score="2"],
+  .score-btn.semantic-score-btn[data-score="3"],
+  .score-btn.semantic-score-btn[data-score="4"] {
+    width:56px !important;
+    min-width:56px !important;
+  }
+  .done,
+  .star-btn {
+    height:32px !important;
+    min-height:32px !important;
+  }
+  .note-input {
+    height:36px !important;
+    min-height:36px !important;
+    max-height:36px !important;
+    padding:3px 5px !important;
+    font-size:9px !important;
+  }
+
+  .right-scroll {
+    touch-action:pan-x pan-y !important;
+  }
+}
+
+/* Très petits iPhone en paysage : le titre cède encore un peu de place
+   aux commandes plutôt que de créer une deuxième ligne. */
+@media (orientation:landscape) and (max-height:430px) and (max-width:760px) {
+  :root {
+    --left-template:160px !important;
+    --left-width:160px !important;
+  }
+  header .title-role-row {
+    grid-template-columns:minmax(74px,1fr) minmax(465px,500px) !important;
+  }
+  header .title-role-row > h1 {
+    font-size:8.5px !important;
+  }
+  header .title-actions {
+    grid-template-columns:25px minmax(132px,1.5fr) 52px 25px minmax(85px,.9fr) minmax(92px,1fr) !important;
+    gap:2px !important;
+  }
+  header .role-choice { font-size:7.8px !important; }
+  header .title-actions > .view-toggle,
+  header .title-actions > .readonly-toggle { font-size:7px !important; }
 }

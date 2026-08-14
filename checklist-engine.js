@@ -4,16 +4,16 @@ const CHECKLIST_DATA = window.CHECKLIST_DATA;
 if (!CHECKLIST_VARIANT || !CHECKLIST_DATA) throw new Error("Checklist configuration missing.");
 const initialItems = CHECKLIST_DATA.items;
 const categoryColors = CHECKLIST_DATA.categoryColors;
-// v123 — moteur commun optimisé : catalogue statique compact, rendu en une passe,
+// v125 — moteur commun optimisé : catalogue statique compact, rendu en une passe,
 // colonnes et sélecteurs DOM mis en cache, métriques du tirage calculées en une passe.
-const APP_VERSION = "v123";
+const APP_VERSION = "v125";
 
 const LANG_KEY = window.CHECKLIST_SITE.languageKey;
 const LEGACY_LANG_KEY = window.CHECKLIST_SITE.legacyLanguageKey;
 const CATEGORY_EN = CHECKLIST_DATA.categoryEn;
 const I18N = CHECKLIST_DATA.i18n;
 
-// v123 — convention spatiale unique : homme/bleu à gauche, femme/prune à droite.
+// v124 — convention spatiale unique : homme/bleu à gauche, femme/prune à droite.
 // Chaque variante déclare quel rôle BDSM correspond à chaque côté.
 const ROLE_VISUAL_ORDER = (() => {
   const order = Array.isArray(CHECKLIST_VARIANT.visualRoleOrder) ? CHECKLIST_VARIANT.visualRoleOrder : ["sub","dom"];
@@ -746,7 +746,9 @@ const statTogetherEl = document.getElementById("statTogether");
 const statRatedEl = document.getElementById("statRated");
 const statStarredEl = document.getElementById("statStarred");
 const statModeEl = document.getElementById("statMode");
-const MOBILE_MQ = window.matchMedia("(max-width:650px)");
+// v125 : le paysage iPhone utilise volontairement la géométrie mobile :
+// une seule colonne fixe (Pratique), sans colonne Catégorie.
+const MOBILE_MQ = window.matchMedia("(max-width:650px), (orientation: landscape) and (max-height:520px) and (max-width:1100px)");
 const roleButtons = [...document.querySelectorAll("[data-role-choice]")];
 const roleSwitchEl = document.querySelector(".role-switch");
 if (roleSwitchEl) {
