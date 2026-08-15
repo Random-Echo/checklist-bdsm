@@ -730,12 +730,12 @@ body[data-role="dom"] {
   --role-dark:var(--dom-role-dark);
 }
 body[data-checklist-id="maitresse-soumis"] {
-  --variant-bg:#E5D2DE;
-  --variant-header:rgba(240,226,235,.98);
+  --variant-bg:#A96B94;
+  --variant-header:rgba(191,136,171,.96);
 }
 body[data-checklist-id="maitre-soumise"] {
-  --variant-bg:#D4E5ED;
-  --variant-header:rgba(227,239,245,.98);
+  --variant-bg:#688EAD;
+  --variant-header:rgba(124,161,194,.96);
   --sub-role-color:#8B3F6F;
   --sub-role-soft:#F7EAF2;
   --sub-role-dark:#67294D;
