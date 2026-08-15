@@ -730,12 +730,12 @@ body[data-role="dom"] {
   --role-dark:var(--dom-role-dark);
 }
 body[data-checklist-id="maitresse-soumis"] {
-  --variant-bg:#F6F0F5;
-  --variant-header:rgba(250,246,249,.98);
+  --variant-bg:#EFE3EB;
+  --variant-header:rgba(247,239,244,.98);
 }
 body[data-checklist-id="maitre-soumise"] {
-  --variant-bg:#EEF4F8;
-  --variant-header:rgba(244,248,250,.98);
+  --variant-bg:#E2EDF3;
+  --variant-header:rgba(237,245,248,.98);
   --sub-role-color:#8B3F6F;
   --sub-role-soft:#F7EAF2;
   --sub-role-dark:#67294D;
@@ -4084,7 +4084,7 @@ body[data-checklist-id="maitre-soumise"] .table-shell {
 }
 
 
-/* v134 — première utilisation et contrôle après fusion */
+/* Première utilisation et contrôle après fusion */
 .first-use-modal[hidden]{display:none!important}
 .first-use-modal{position:fixed;inset:0;z-index:2400;display:grid;place-items:center;padding:18px}
 .first-use-backdrop{position:absolute;inset:0;background:rgba(16,22,28,.68);backdrop-filter:blur(4px)}

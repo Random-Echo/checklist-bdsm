@@ -6,8 +6,9 @@ const initialItems = CHECKLIST_DATA.items;
 for (let i = 0; i < initialItems.length; i++) {
   if (!Number.isInteger(initialItems[i].displayIndex)) initialItems[i].displayIndex = i + 1;
 }
+const catalogIdSet = new Set(initialItems.map(item => Number(item.id)));
 const categoryColors = CHECKLIST_DATA.categoryColors;
-const APP_VERSION = "v134";
+const APP_VERSION = "V1.0";
 
 const LANG_KEY = window.CHECKLIST_SITE.languageKey;
 const CATEGORY_EN = CHECKLIST_DATA.categoryEn;
@@ -215,10 +216,8 @@ function setLanguage(lang, persist = true) {
   renderRoleUI();
   renderColumnControls();
   renderQuickFilters();
-  renderSessionPanel();
   renderExchangeInfo();
   render();
-  updateCompatibilityIndicator();
 }
 
 // Espaces de stockage séparés pour les deux dynamiques ; les sauvegardes globales regroupent les deux.
@@ -423,6 +422,7 @@ try {
 let itemsById = new Map();
 let itemsByCategory = new Map();
 let searchBaseById = new Map();
+let searchNotesById = new Map();
 // Caches du DOM courant : reconstruits uniquement après un render complet.
 let leftRowById = new Map();
 let rightRowById = new Map();
@@ -469,6 +469,7 @@ function rebuildItemIndexes() {
   itemsById = new Map();
   itemsByCategory = new Map();
   searchBaseById = new Map();
+  searchNotesById = new Map();
 
   for (const item of items) {
     const id = Number(item.id);
@@ -479,22 +480,37 @@ function rebuildItemIndexes() {
       item.practice || "", item.explanation || "", item.category || "",
       item.practiceEn || "", item.explanationEn || "", CATEGORY_EN[item.category] || ""
     ].join(" ").toLowerCase());
+    searchNotesById.set(id, `${item.noteFemale || ""} ${item.noteMale || ""}`.toLowerCase());
   }
 }
 
 rebuildItemIndexes();
 
-try {
-  const compact = serializeLocalItems();
-  if (localStorage.getItem(STORAGE_KEY) !== compact) localStorage.setItem(STORAGE_KEY, compact);
-} catch (_) {}
+// Caches de données dérivées : un changement de réponse les invalide une seule fois.
+// Les statistiques et le tirage ne reparcourent ainsi pas les 600 pratiques plusieurs fois par cycle UI.
+let derivedDataRevision = 0;
+let statsSnapshotCache = { revision:-1, value:null };
+let randomSnapshotCache = { revision:-1, value:null };
+let categoryStateCache = new Map();
+let quickProgressCache = new Map();
+let randomStateRevision = 0;
+function invalidateRandomSnapshot() {
+  randomStateRevision++;
+  randomSnapshotCache.revision = -1;
+}
+function invalidateDerivedData() {
+  derivedDataRevision++;
+  statsSnapshotCache.revision = -1;
+  categoryStateCache.clear();
+  quickProgressCache.clear();
+  invalidateRandomSnapshot();
+}
 
 let sessionOrder = [];
 try {
   const savedSession = JSON.parse(localStorage.getItem(SESSION_KEY) || "[]");
   if (Array.isArray(savedSession)) {
-    const validIds = new Set(initialItems.map(x => Number(x.id)));
-    sessionOrder = [...new Set(savedSession.map(Number).filter(id => validIds.has(id)))];
+    sessionOrder = [...new Set(savedSession.map(Number).filter(id => catalogIdSet.has(id)))];
   }
 } catch (_) {
   sessionOrder = [];
@@ -575,25 +591,6 @@ function renderExperienceModeUI() {
   );
 }
 
-function hasExplicitFilters() {
-  return !!(
-    search.value.trim() ||
-    category.value ||
-    status.value ||
-    minFilterScore.value !== "" ||
-    riskFilter.value !== "" ||
-    activeQuickFilter
-  );
-}
-
-function isCategoryCollapsed(categoryName) {
-  // Recherche et filtres ouvrent temporairement les résultats pour éviter
-  // qu'une pratique trouvée reste cachée derrière une catégorie repliée.
-  if (hasExplicitFilters()) return false;
-  return collapsedCategories.has(categoryName);
-}
-
-
 document.body.dataset.role = currentRole;
 document.body.dataset.readonly = readOnly ? "true" : "false";
 
@@ -670,8 +667,7 @@ let randomDrawHistory = (() => {
   try {
     const raw = JSON.parse(localStorage.getItem(RANDOM_HISTORY_KEY) || "[]");
     if (!Array.isArray(raw)) return new Set();
-    const validIds = new Set(initialItems.map(x => Number(x.id)));
-    return new Set(raw.map(Number).filter(id => validIds.has(id)));
+    return new Set(raw.map(Number).filter(id => catalogIdSet.has(id)));
   } catch (_) {
     return new Set();
   }
@@ -700,6 +696,7 @@ function applyRandomPreferences(prefs, persist=false) {
   if (typeof p.onlyNew === "boolean") randomOnlyNew.checked = p.onlyNew;
   if (typeof p.excludeHighRisk === "boolean") randomExcludeHighRisk.checked = p.excludeHighRisk;
   if (typeof p.noRepeat === "boolean") randomNoRepeat.checked = p.noRepeat;
+  invalidateRandomSnapshot();
   if (persist) localStorage.setItem(RANDOM_PREFS_KEY, JSON.stringify(getRandomPreferences()));
 }
 
@@ -720,6 +717,7 @@ function saveRandomHistory() {
 
 function clearRandomHistory(showMessage=true) {
   randomDrawHistory.clear();
+  invalidateRandomSnapshot();
   saveRandomHistory();
   updateCompatibilityIndicator();
   if (showMessage) randomResult.innerHTML = `<strong>${t("randomCycleReset")}</strong>`;
@@ -964,9 +962,9 @@ function globalBackupConfirmationText(type, payload) {
   if (type === "full") {
     message = "FULL BACKUP.\n\nIt will completely replace data from BOTH checklists: Male and Female answers, Done together, F:/M: shared-note lines, safety, sessions, display settings and random-draw state.";
   } else if (type === "male") {
-    message = "MALE BACKUP.\n\nIt will replace only the man’s answers in BOTH dynamics: Submissive in Domme & Submissive + Master in Master & Submissive.\n\nHis M: shared-note line will be replaced by the file. The F: line stays untouched. Done together is additive: an imported No cannot erase a local Yes. Safety is merged conservatively. Female answers, sessions and display settings are unchanged.";
+    message = "MALE BACKUP.\n\nIt will replace only the man’s answers in BOTH dynamics: Submissive in Mistress & Submissive + Master in Master & Submissive.\n\nHis M: shared-note line will be replaced by the file. The F: line stays untouched. Done together is additive: an imported No cannot erase a local Yes. Safety is merged conservatively. Female answers, sessions and display settings are unchanged.";
   } else {
-    message = "FEMALE BACKUP.\n\nIt will replace only the woman’s answers in BOTH dynamics: Domme in Domme & Submissive + Submissive in Master & Submissive.\n\nHer F: shared-note line will be replaced by the file. The M: line stays untouched. Done together is additive: an imported No cannot erase a local Yes. Safety is merged conservatively. Male answers, sessions and display settings are unchanged.";
+    message = "FEMALE BACKUP.\n\nIt will replace only the woman’s answers in BOTH dynamics: Mistress in Mistress & Submissive + Submissive in Master & Submissive.\n\nHer F: shared-note line will be replaced by the file. The M: line stays untouched. Done together is additive: an imported No cannot erase a local Yes. Safety is merged conservatively. Male answers, sessions and display settings are unchanged.";
   }
   if (conflicts.length) message += `\n\n⚠️ ${conflicts.length} safeword/signal conflict(s): the local value will be kept.`;
   if (older) message += `\n\n⚠️ This ${label} file appears older than the corresponding local data.`;
@@ -1089,7 +1087,7 @@ function firstUseGuideCopy() {
     title:"Fill your answers separately first, then merge",
     intro:"To reduce influence from the other person’s answers, each person should ideally fill their own part separately, preferably on their own device.",
     cards:[
-      ["1 · Fill separately","The man fills his Submissive + Master roles; the woman fills her Domme + Submissive roles. Focus on Preference, Done before and After experience without checking the other person’s answers."],
+      ["1 · Fill separately","The man fills his Submissive + Master roles; the woman fills her Mistress + Submissive roles. Focus on Preference, Done before and After experience without checking the other person’s answers."],
       ["2 · Shared data while filling","Notes: each person edits only their F: or M: line. Done together may be entered on either device. Safety / limits / aftercare can be entered by each person and are merged conservatively."],
       ["3 · Merge with backups","Export 🔵 Male or 🟣 Female, send the JSON file to the other device, then use 📂 Restore. The import adds that person across both dynamics without overwriting the other person’s personal answers."],
       ["4 · Review together before a session","After merging, review Done together, F:/M: notes and especially Safety / limits / aftercare together. Then build the session on the reference device."]
@@ -1450,14 +1448,25 @@ function sanitizeSessionForLimits(persist = true, touchModified = false) {
 }
 
 
-function renderSessionPanel() {
+let lastSessionPanelSignature = "";
+function renderSessionPanel(force=false) {
   if (!sessionList || !sessionSummary) return;
 
   const selected = sessionOrder
     .map(id => itemsById.get(Number(id)))
     .filter(Boolean);
+  const signature = [
+    currentLang, readOnly ? 1 : 0,
+    ...selected.map(item => `${item.id}:${hasFantasyOnly(item) ? 1 : 0}`)
+  ].join("|");
+  if (!force && signature === lastSessionPanelSignature) {
+    if (!sessionMode.hidden) renderSessionMode();
+    return;
+  }
+  lastSessionPanelSignature = signature;
 
-  const fantasyCount = selected.filter(hasFantasyOnly).length;
+  let fantasyCount = 0;
+  for (const item of selected) if (hasFantasyOnly(item)) fantasyCount++;
   sessionSummary.textContent = selected.length
     ? (currentLang === "fr"
       ? `${practiceCountText(selected.length)} dans la séance${fantasyCount ? ` · ${fantasyCount} fantasme${fantasyCount > 1 ? "s" : ""}` : ""}. Utilisez ↑ et ↓ pour définir l’ordre.`
@@ -1891,61 +1900,72 @@ function renderRightCell(item, key) {
 }
 
 
-function matches(item, q = "") {
-  if (activeQuickFilter !== "session" && Number(item.level || 3) > experienceMaxLevel()) return false;
+function currentFilterState(q = "") {
+  const minRaw = minFilterScore.value;
+  return {
+    q,
+    maxLevel:experienceMaxLevel(),
+    category:category.value,
+    risk:riskFilter.value,
+    status:status.value,
+    minScore:minRaw === "" ? null : Number(minRaw),
+    quick:activeQuickFilter,
+    incompleteField:currentRole === "dom" ? "wantDom" : "wantSub"
+  };
+}
 
-  if (q) {
-    const staticText = searchBaseById.get(Number(item.id)) || "";
-    const notesText = `${item.noteFemale || ""} ${item.noteMale || ""}`.toLowerCase();
-    if (!staticText.includes(q) && !notesText.includes(q)) return false;
-  }
+function matches(item, state) {
+  if (state.quick !== "session" && Number(item.level || 3) > state.maxLevel) return false;
 
-  if (category.value && item.category !== category.value) return false;
-  if (riskFilter.value && item.risk !== riskFilter.value) return false;
-  if (status.value === "priorSub" && !item.priorSub) return false;
-  if (status.value === "priorDom" && !item.priorDom) return false;
-  if (status.value === "together" && !item.doneTogether) return false;
-  if (status.value === "notTogether" && item.doneTogether) return false;
-  if (status.value === "bothRated" && !(Number.isInteger(item.wantSub) && Number.isInteger(item.wantDom))) return false;
-  if (status.value === "bothFantasy") {
-    const s = effectiveRoleScore(item, "sub");
-    const d = effectiveRoleScore(item, "dom");
-    if (!(s === FANTASY_SCORE && d === FANTASY_SCORE)) return false;
-  }
-  if (status.value === "bothAfterRated" && !(hasRoleExperience(item, "sub") && hasRoleExperience(item, "dom") && Number.isInteger(item.afterSub) && Number.isInteger(item.afterDom))) return false;
-
-  if (minFilterScore.value !== "") {
-    const min = Number(minFilterScore.value);
-    const s = effectiveRoleScore(item, "sub");
-    const d = effectiveRoleScore(item, "dom");
-    if (!meetsRealMinimum(s, min) || !meetsRealMinimum(d, min)) return false;
+  if (state.q) {
+    const id = Number(item.id);
+    const staticText = searchBaseById.get(id) || "";
+    const notesText = searchNotesById.get(id) || "";
+    if (!staticText.includes(state.q) && !notesText.includes(state.q)) return false;
   }
 
-  if (activeQuickFilter === "incompleteRole") {
-    const field = currentRole === "dom" ? "wantDom" : "wantSub";
-    if (Number.isInteger(item[field])) return false;
+  if (state.category && item.category !== state.category) return false;
+  if (state.risk && item.risk !== state.risk) return false;
+  if (state.status === "priorSub" && !item.priorSub) return false;
+  if (state.status === "priorDom" && !item.priorDom) return false;
+  if (state.status === "together" && !item.doneTogether) return false;
+  if (state.status === "notTogether" && item.doneTogether) return false;
+  if (state.status === "bothRated" && !(Number.isInteger(item.wantSub) && Number.isInteger(item.wantDom))) return false;
+  if (state.status === "bothFantasy") {
+    const subScore = effectiveRoleScore(item, "sub");
+    const domScore = effectiveRoleScore(item, "dom");
+    if (!(subScore === FANTASY_SCORE && domScore === FANTASY_SCORE)) return false;
   }
-  if (activeQuickFilter === "session" && !isInSession(item)) return false;
-  if (activeQuickFilter === "randomCriteria" && !matchesRandomPairCriterion(item)) return false;
-  if (activeQuickFilter === "testSub" && effectiveRoleScore(item, "sub") !== FAVORITE_SCORE) return false;
-  if (activeQuickFilter === "testDom" && effectiveRoleScore(item, "dom") !== FAVORITE_SCORE) return false;
-  if (activeQuickFilter === "testBoth" && !(effectiveRoleScore(item, "sub") === FAVORITE_SCORE && effectiveRoleScore(item, "dom") === FAVORITE_SCORE)) return false;
+  if (state.status === "bothAfterRated" && !(hasRoleExperience(item, "sub") && hasRoleExperience(item, "dom") && Number.isInteger(item.afterSub) && Number.isInteger(item.afterDom))) return false;
 
-  if (activeQuickFilter === "both4") {
-    const s = effectiveRoleScore(item, "sub");
-    const d = effectiveRoleScore(item, "dom");
-    if (!meetsRealMinimum(s, 3) || !meetsRealMinimum(d, 3)) return false;
+  if (state.minScore !== null) {
+    const subScore = effectiveRoleScore(item, "sub");
+    const domScore = effectiveRoleScore(item, "dom");
+    if (!meetsRealMinimum(subScore, state.minScore) || !meetsRealMinimum(domScore, state.minScore)) return false;
   }
-  if (activeQuickFilter === "both4todo") {
-    const s = effectiveRoleScore(item, "sub");
-    const d = effectiveRoleScore(item, "dom");
-    if (item.doneTogether || !meetsRealMinimum(s, 3) || !meetsRealMinimum(d, 3)) return false;
+
+  if (state.quick === "incompleteRole" && Number.isInteger(item[state.incompleteField])) return false;
+  if (state.quick === "session" && !isInSession(item)) return false;
+  if (state.quick === "randomCriteria" && !matchesRandomPairCriterion(item)) return false;
+  if (state.quick === "testSub" && effectiveRoleScore(item, "sub") !== FAVORITE_SCORE) return false;
+  if (state.quick === "testDom" && effectiveRoleScore(item, "dom") !== FAVORITE_SCORE) return false;
+  if (state.quick === "testBoth" && !(effectiveRoleScore(item, "sub") === FAVORITE_SCORE && effectiveRoleScore(item, "dom") === FAVORITE_SCORE)) return false;
+
+  if (state.quick === "both4") {
+    const subScore = effectiveRoleScore(item, "sub");
+    const domScore = effectiveRoleScore(item, "dom");
+    if (!meetsRealMinimum(subScore, 3) || !meetsRealMinimum(domScore, 3)) return false;
   }
-  if (activeQuickFilter === "together" && !item.doneTogether) return false;
-  if (activeQuickFilter === "afterBoth4") {
+  if (state.quick === "both4todo") {
+    const subScore = effectiveRoleScore(item, "sub");
+    const domScore = effectiveRoleScore(item, "dom");
+    if (item.doneTogether || !meetsRealMinimum(subScore, 3) || !meetsRealMinimum(domScore, 3)) return false;
+  }
+  if (state.quick === "together" && !item.doneTogether) return false;
+  if (state.quick === "afterBoth4") {
     if (!(hasRoleExperience(item, "sub") && hasRoleExperience(item, "dom")) || !meetsRealMinimum(item.afterSub, 3) || !meetsRealMinimum(item.afterDom, 3)) return false;
   }
-  if (activeQuickFilter === "afterMissing") {
+  if (state.quick === "afterMissing") {
     if (!((hasRoleExperience(item, "sub") && !Number.isInteger(item.afterSub)) || (hasRoleExperience(item, "dom") && !Number.isInteger(item.afterDom)))) return false;
   }
   return true;
@@ -1993,13 +2013,26 @@ function renderColumnControls() {
 }
 
 
-function renderQuickFilters() {
-  const field = currentRole === "dom" ? "wantDom" : "wantSub";
+function getIncompleteRoleCount() {
   const maxLevel = experienceMaxLevel();
-  let incompleteCount = 0;
+  const key = `${derivedDataRevision}|${currentRole}|${maxLevel}`;
+  if (quickProgressCache.has(key)) return quickProgressCache.get(key);
+  const field = currentRole === "dom" ? "wantDom" : "wantSub";
+  let count = 0;
   for (const item of items) {
-    if (Number(item.level || 3) <= maxLevel && !Number.isInteger(item[field])) incompleteCount++;
+    if (Number(item.level || 3) <= maxLevel && !Number.isInteger(item[field])) count++;
   }
+  quickProgressCache.set(key, count);
+  return count;
+}
+
+let lastQuickFiltersSignature = "";
+function renderQuickFilters(force=false) {
+  const maxLevel = experienceMaxLevel();
+  const incompleteCount = getIncompleteRoleCount();
+  const signature = `${currentLang}|${currentRole}|${activeQuickFilter}|${sessionOrder.length}|${maxLevel}|${incompleteCount}`;
+  if (!force && signature === lastQuickFiltersSignature) return;
+  lastQuickFiltersSignature = signature;
 
   quickFilters.innerHTML = quickFilterDefs.map(f => {
     let label = `${f.prefix || ""}${t(f.labelKey)}`;
@@ -2091,17 +2124,43 @@ function categoryRoleField() {
   return currentRole === "dom" ? "wantDom" : "wantSub";
 }
 
-function categoryCompletion(categoryName) {
+function getCategoryDerivedState(categoryName) {
   const field = categoryRoleField();
   const maxLevel = experienceMaxLevel();
+  const cacheKey = `${derivedDataRevision}|${currentRole}|${maxLevel}|${categoryName}`;
+  const cached = categoryStateCache.get(cacheKey);
+  if (cached) return cached;
+
   let filled = 0;
   let total = 0;
+  let firstValue;
+  let hasValue = false;
+  let mixed = false;
   for (const item of itemsByCategory.get(categoryName) || []) {
     if (Number(item.level || 3) > maxLevel) continue;
     total++;
-    if (Number.isInteger(item[field])) filled++;
+    const value = Number.isInteger(item[field]) ? item[field] : null;
+    if (value !== null) filled++;
+    if (!hasValue) {
+      firstValue = value;
+      hasValue = true;
+    } else if (value !== firstValue) {
+      mixed = true;
+    }
   }
-  return {filled, total};
+
+  let scoreState;
+  if (!hasValue || (firstValue === null && !mixed)) scoreState = { kind:"unknown", value:null };
+  else if (mixed) scoreState = { kind:"mixed", value:null };
+  else scoreState = { kind:"same", value:firstValue };
+
+  const result = { completion:{filled,total}, scoreState };
+  categoryStateCache.set(cacheKey, result);
+  return result;
+}
+
+function categoryCompletion(categoryName) {
+  return getCategoryDerivedState(categoryName).completion;
 }
 
 function categoryProgressTitle(categoryName, completion) {
@@ -2128,15 +2187,7 @@ function refreshCategoryProgress(categoryName) {
 }
 
 function categoryScoreState(categoryName) {
-  const field = categoryRoleField();
-  const maxLevel = experienceMaxLevel();
-  const values = (itemsByCategory.get(categoryName) || [])
-    .filter(x => Number(x.level || 3) <= maxLevel)
-    .map(x => Number.isInteger(x[field]) ? x[field] : null);
-  if (!values.length || values.every(v => v === null)) return { kind:"unknown", value:null };
-  const first = values[0];
-  if (values.every(v => v === first)) return { kind:first === null ? "unknown" : "same", value:first };
-  return { kind:"mixed", value:null };
+  return getCategoryDerivedState(categoryName).scoreState;
 }
 
 function renderCategoryScoreControls(categoryName) {
@@ -2227,6 +2278,7 @@ function undoLastCategoryScoreBatch() {
   lastCategoryScoreBatch = null;
   hideCategoryUndoToast();
   if (!reverted) return;
+  invalidateDerivedData();
   scheduleSave(batch.role);
   renderQuickFilters();
   render();
@@ -2411,6 +2463,7 @@ async function applyCategoryScore(categoryName, rawScore) {
   for (const item of changes) {
     item[field] = appliedValue;
   }
+  invalidateDerivedData();
   lastCategoryScoreBatch = batch;
   const sessionChangedByLimit = sanitizeSessionForLimits(true, true);
   if (sessionChangedByLimit) renderSessionPanel();
@@ -2426,6 +2479,8 @@ function render() {
   applyColumnGeometry();
 
   const filterQuery = search.value.trim().toLowerCase();
+  const filterState = currentFilterState(filterQuery);
+  const explicitFilters = !!(filterQuery || filterState.category || filterState.status || filterState.minScore !== null || filterState.risk || filterState.quick);
   const visibleFixed = getVisibleFixedColumns();
   const visibleScroll = getVisibleScrollColumns();
   let visibleCount = 0;
@@ -2439,12 +2494,12 @@ function render() {
     const sourceItems = itemsByCategory.get(categoryName) || [];
     const categoryItems = [];
     for (const item of sourceItems) {
-      if (matches(item, filterQuery)) categoryItems.push(item);
+      if (matches(item, filterState)) categoryItems.push(item);
     }
     if (!categoryItems.length) continue;
     visibleCount += categoryItems.length;
     const catColor = categoryColors[categoryName] || "#E7E7E7";
-    const collapsed = isCategoryCollapsed(categoryName);
+    const collapsed = explicitFilters ? false : collapsedCategories.has(categoryName);
     const completion = categoryCompletion(categoryName);
     const progressTitle = categoryProgressTitle(categoryName, completion);
     const progressClass = completion.total > 0 && completion.filled === completion.total
@@ -2482,8 +2537,8 @@ function render() {
 
   // Une seule collecte DOM après le rendu ; ces tableaux servent aussi à la synchronisation
   // des hauteurs et au suivi de catégorie mobile.
-  syncLeftRows = [...leftTable.querySelectorAll("[data-sync]")];
-  syncRightRows = [...rightTable.querySelectorAll("[data-sync]")];
+  syncLeftRows = Array.from(leftTable.children);
+  syncRightRows = Array.from(rightTable.children);
   leftRowById = new Map();
   rightRowById = new Map();
   categorySectionByName = new Map();
@@ -2596,6 +2651,7 @@ function isRandomPairEligible(item) {
 }
 
 function getRandomEligibilitySnapshot() {
+  if (randomSnapshotCache.revision === randomStateRevision && randomSnapshotCache.value) return randomSnapshotCache.value;
   const pairEligible = [];
   const baseEligible = [];
   const eligible = [];
@@ -2622,9 +2678,12 @@ function getRandomEligibilitySnapshot() {
     }
   }
 
-  return { pairEligible, baseEligible, eligible, bothFavorite, newTogether, fantasyCount };
+  const snapshot = { pairEligible, baseEligible, eligible, bothFavorite, newTogether, fantasyCount };
+  randomSnapshotCache = { revision:randomStateRevision, value:snapshot };
+  return snapshot;
 }
 
+let lastCompatibilitySignature = "";
 function updateCompatibilityIndicator() {
   const snapshot = getRandomEligibilitySnapshot();
   const { pairEligible, baseEligible, eligible, bothFavorite, newTogether, fantasyCount } = snapshot;
@@ -2637,6 +2696,12 @@ function updateCompatibilityIndicator() {
   const criterionLabel = thresholdValues[0] === thresholdValues[1]
     ? thresholdLabels[0]
     : `${thresholdLabels[0]} + ${thresholdLabels[1]}`;
+  const signature = [
+    currentLang, thresholdValues.join(","), pairEligible.length, baseCandidates.length, candidates,
+    bothFavorite, newTogether, fantasyCount, randomNoRepeat.checked ? 1 : 0
+  ].join("|");
+  if (signature === lastCompatibilitySignature) return;
+  lastCompatibilitySignature = signature;
   compatIndicator.textContent = currentLang === "fr"
     ? `${pairEligible.length} au critère : ${criterionLabel}`
     : `${pairEligible.length} match: ${criterionLabel}`;
@@ -2667,13 +2732,8 @@ function updateCompatibilityIndicator() {
   }
 }
 
-function updateStats(visibleCount = null) {
-  if (visibleCount !== null) {
-    statVisibleEl.textContent = currentLang === "fr"
-      ? `${visibleCount} / ${items.length} dans ce mode / filtre`
-      : `${visibleCount} / ${items.length} in this mode / filter`;
-  }
-
+function getStatsSnapshot() {
+  if (statsSnapshotCache.revision === derivedDataRevision && statsSnapshotCache.value) return statsSnapshotCache.value;
   let priorSubCount = 0, priorDomCount = 0, togetherCount = 0;
   let ratedSub = 0, ratedDom = 0, favoriteSubCount = 0, favoriteDomCount = 0;
   for (const item of items) {
@@ -2685,36 +2745,73 @@ function updateStats(visibleCount = null) {
     if (effectiveRoleScore(item, "sub") === FAVORITE_SCORE) favoriteSubCount++;
     if (effectiveRoleScore(item, "dom") === FAVORITE_SCORE) favoriteDomCount++;
   }
+  const value = {
+    togetherCount,
+    priorCounts:{sub:priorSubCount, dom:priorDomCount},
+    ratedCounts:{sub:ratedSub, dom:ratedDom},
+    favoriteCounts:{sub:favoriteSubCount, dom:favoriteDomCount}
+  };
+  statsSnapshotCache = { revision:derivedDataRevision, value };
+  return value;
+}
 
-  const priorCounts = {sub:priorSubCount, dom:priorDomCount};
-  const ratedCounts = {sub:ratedSub, dom:ratedDom};
-  const favoriteCounts = {sub:favoriteSubCount, dom:favoriteDomCount};
-  const roleStats = (counts, formatter) => ROLE_VISUAL_ORDER.map(role => formatter(role, counts[role])).join(" · ");
+let lastStatsSignature = "";
+let lastVisibleStatCount = null;
+function updateStats(visibleCount = null) {
+  if (visibleCount !== null) lastVisibleStatCount = visibleCount;
 
-  statDoneEl.textContent = currentLang === "fr"
-    ? `Déjà fait avant : ${roleStats(priorCounts, (role, count) => `${roleLabel(role)} ${count}`)}`
-    : `Done before: ${roleStats(priorCounts, (role, count) => `${roleLabel(role)} ${count}`)}`;
-  statTogetherEl.textContent = currentLang === "fr"
-    ? `${togetherCount} faites ensemble`
-    : `${togetherCount} done together`;
-  statRatedEl.textContent = currentLang === "fr"
-    ? `Progression : ${roleStats(ratedCounts, (role, count) => `${roleLabel(role)} ${count}/${items.length}`)}`
-    : `Progress: ${roleStats(ratedCounts, (role, count) => `${roleLabel(role)} ${count}/${items.length}`)}`;
-  statStarredEl.textContent = currentLang === "fr"
-    ? `Favoris : ${roleStats(favoriteCounts, (role, count) => `${favoriteSymbol(role)} ${roleLabel(role)} ${count}`)}`
-    : `Favorites: ${roleStats(favoriteCounts, (role, count) => `${favoriteSymbol(role)} ${roleLabel(role)} ${count}`)}`;
+  const { togetherCount, priorCounts, ratedCounts, favoriteCounts } = getStatsSnapshot();
+  const signature = [
+    currentLang, currentRole, experienceMode, readOnly ? 1 : 0, lastVisibleStatCount,
+    togetherCount,
+    priorCounts.sub, priorCounts.dom,
+    ratedCounts.sub, ratedCounts.dom,
+    favoriteCounts.sub, favoriteCounts.dom
+  ].join("|");
 
-  if (statModeEl) statModeEl.textContent = currentLang === "fr"
-    ? `Parcours : ${experienceLabel()} · rôle ${roleLabel(currentRole)}${readOnly ? ` · ${t("readOnlySuffix")}` : ""}`
-    : `Path: ${experienceLabel()} · ${roleLabel(currentRole)} role${readOnly ? ` · ${t("readOnlySuffix")}` : ""}`;
+  if (signature !== lastStatsSignature) {
+    lastStatsSignature = signature;
+    if (lastVisibleStatCount !== null) {
+      statVisibleEl.textContent = currentLang === "fr"
+        ? `${lastVisibleStatCount} / ${items.length} dans ce mode / filtre`
+        : `${lastVisibleStatCount} / ${items.length} in this mode / filter`;
+    }
+
+    const roleStats = (counts, formatter) => ROLE_VISUAL_ORDER.map(role => formatter(role, counts[role])).join(" · ");
+
+    statDoneEl.textContent = currentLang === "fr"
+      ? `Déjà fait avant : ${roleStats(priorCounts, (role, count) => `${roleLabel(role)} ${count}`)}`
+      : `Done before: ${roleStats(priorCounts, (role, count) => `${roleLabel(role)} ${count}`)}`;
+    statTogetherEl.textContent = currentLang === "fr"
+      ? `${togetherCount} faites ensemble`
+      : `${togetherCount} done together`;
+    statRatedEl.textContent = currentLang === "fr"
+      ? `Progression : ${roleStats(ratedCounts, (role, count) => `${roleLabel(role)} ${count}/${items.length}`)}`
+      : `Progress: ${roleStats(ratedCounts, (role, count) => `${roleLabel(role)} ${count}/${items.length}`)}`;
+    statStarredEl.textContent = currentLang === "fr"
+      ? `Favoris : ${roleStats(favoriteCounts, (role, count) => `${favoriteSymbol(role)} ${roleLabel(role)} ${count}`)}`
+      : `Favorites: ${roleStats(favoriteCounts, (role, count) => `${favoriteSymbol(role)} ${roleLabel(role)} ${count}`)}`;
+
+    if (statModeEl) statModeEl.textContent = currentLang === "fr"
+      ? `Parcours : ${experienceLabel()} · rôle ${roleLabel(currentRole)}${readOnly ? ` · ${t("readOnlySuffix")}` : ""}`
+      : `Path: ${experienceLabel()} · ${roleLabel(currentRole)} role${readOnly ? ` · ${t("readOnlySuffix")}` : ""}`;
+  }
 
   updateCompatibilityIndicator();
   renderSessionPanel();
 }
 
 
+let randomPickedId = null;
+function clearRandomPickedMarker() {
+  if (randomPickedId === null) return;
+  const previous = itemsById.get(Number(randomPickedId));
+  if (previous) delete previous._randomPicked;
+  randomPickedId = null;
+}
+
 function pickRandomPractice() {
-  items.forEach(x => delete x._randomPicked);
+  clearRandomPickedMarker();
 
   const snapshot = getRandomEligibilitySnapshot();
   const baseEligible = snapshot.baseEligible;
@@ -2739,6 +2836,7 @@ function pickRandomPractice() {
 
   if (randomNoRepeat.checked && !eligible.length) {
     randomDrawHistory.clear();
+    invalidateRandomSnapshot();
     saveRandomHistory();
     eligible = [...baseEligible];
     cycleRestarted = true;
@@ -2746,8 +2844,10 @@ function pickRandomPractice() {
 
   const picked = eligible[Math.floor(Math.random() * eligible.length)];
   picked._randomPicked = true;
+  randomPickedId = Number(picked.id);
   if (randomNoRepeat.checked) {
     randomDrawHistory.add(Number(picked.id));
+    invalidateRandomSnapshot();
     saveRandomHistory();
   }
 
@@ -2791,7 +2891,6 @@ function pickRandomPractice() {
     `<strong>#${picked.displayIndex ?? picked.id} — ${esc(localizedPractice(picked))}</strong> (${esc(localizedCategory(picked.category))})${riskInfo} — ` +
     `${pairSummary}.` +
     `${fantasyBanner}${cycleText}<div class="random-result-actions"><button class="random-session-btn" data-random-session-id="${picked.id}" type="button" ${already || readOnly ? "disabled" : ""}>${already ? t("alreadyInSession") : addLabel}</button></div>`;
-  updateCompatibilityIndicator();
 }
 
 function getSafety() {
@@ -2996,6 +3095,7 @@ function handleTableClick(e) {
     }
   }
 
+  invalidateDerivedData();
   const sessionChangedByLimit = sanitizeSessionForLimits(true, true);
   if (sessionChangedByLimit) renderSessionPanel();
 
@@ -3032,6 +3132,7 @@ rightTable.addEventListener("input", (e) => {
   const item = itemsById.get(Number(input.dataset.personNote));
   if (!item) return;
   item[noteFieldForPerson(person)] = input.value;
+  searchNotesById.set(Number(item.id), `${item.noteFemale || ""} ${item.noteMale || ""}`.toLowerCase());
   scheduleSave(["common", currentRole]);
 });
 
@@ -3078,6 +3179,7 @@ sessionModeList.addEventListener("input", (e) => {
   const item = itemsById.get(Number(note.dataset.sessionPersonNote));
   if (!item) return;
   item[noteFieldForPerson(person)] = note.value;
+  searchNotesById.set(Number(item.id), `${item.noteFemale || ""} ${item.noteMale || ""}`.toLowerCase());
   scheduleSave(["common", currentRole]);
 });
 
@@ -3090,6 +3192,7 @@ sessionModeList.addEventListener("change", (e) => {
   item.doneTogether = !!checkbox.checked;
   if (!hasRoleExperience(item, "sub")) item.afterSub = null;
   if (!hasRoleExperience(item, "dom")) item.afterDom = null;
+  invalidateDerivedData();
   scheduleSave(["common","sub","dom"]);
   renderSessionMode();
   renderSessionPanel();
@@ -3178,10 +3281,10 @@ experienceSwitch.addEventListener("click", (e) => {
   if (!["beginner","confirmed","advanced"].includes(mode)) return;
   experienceMode = mode;
   localStorage.setItem(EXPERIENCE_MODE_KEY, experienceMode);
+  invalidateRandomSnapshot();
   renderExperienceModeUI();
   renderQuickFilters();
   render();
-  updateCompatibilityIndicator();
 });
 
 function collapseAllCategoriesNow() {
@@ -3223,6 +3326,7 @@ resetRandomCycleBtn.addEventListener("click", () => clearRandomHistory(true));
 [minRandomOne, minRandomOther, randomOnlyNew, randomIncludeNeutralNeutral, randomExcludeHighRisk, randomNoRepeat].forEach(el => {
   const onChange = () => {
     if (randomDrawHistory.size) { randomDrawHistory.clear(); saveRandomHistory(); }
+    invalidateRandomSnapshot();
     saveRandomPreferences();
     if (activeQuickFilter === "randomCriteria") render();
     else updateCompatibilityIndicator();
@@ -3427,7 +3531,7 @@ window.addEventListener("resize", () => {
 });
 
 
-const cats = [...new Set(items.map(x => x.category))];
+const cats = allCatalogCategories;
 
 function renderCategoryControls() {
   const currentValue = category.value;
@@ -3685,6 +3789,12 @@ resetChecklistBtn.addEventListener("click", () => {
   pendingSave = false;
   items = initialItems.map(base => normalizeItem(base, {}));
   rebuildItemIndexes();
+  randomPickedId = null;
+  invalidateDerivedData();
+  lastSessionPanelSignature = "";
+  lastQuickFiltersSignature = "";
+  lastStatsSignature = "";
+  lastVisibleStatCount = null;
   markModified(["sub","dom","common"]);
   save(false);
 
@@ -3788,7 +3898,7 @@ function exportBackup(type) {
       ? "both complete checklists"
       : type === "male"
         ? "Male answers (Submissive + Master), M: line, Done together and safety"
-        : "Female answers (Domme + Submissive), F: line, Done together and safety";
+        : "Female answers (Mistress + Submissive), F: line, Done together and safety";
     randomResult.innerHTML = `<strong>${label} backup created:</strong> ${content} · ${totalEntries} useful entries · ${APP_VERSION}.`;
   }
 }
