@@ -7,11 +7,16 @@ for (let i = 0; i < initialItems.length; i++) {
   if (!Number.isInteger(initialItems[i].displayIndex)) initialItems[i].displayIndex = i + 1;
 }
 const categoryColors = CHECKLIST_DATA.categoryColors;
-const APP_VERSION = "v133";
+const APP_VERSION = "v134";
 
 const LANG_KEY = window.CHECKLIST_SITE.languageKey;
 const CATEGORY_EN = CHECKLIST_DATA.categoryEn;
 const I18N = CHECKLIST_DATA.i18n;
+const ONBOARDING_KEY = window.CHECKLIST_SITE.onboardingKey || "bdsmChecklistSite_firstUseGuide_v1";
+const MERGE_REVIEW_KEY = "bdsmChecklistSite_mergeReviewPending_v1";
+let onboardingModal = null;
+let onboardingDialog = null;
+let mergeReviewBanner = null;
 // Chaque variante déclare quel rôle BDSM correspond à chaque côté.
 const ROLE_VISUAL_ORDER = (() => {
   const order = Array.isArray(CHECKLIST_VARIANT.visualRoleOrder) ? CHECKLIST_VARIANT.visualRoleOrder : ["sub","dom"];
@@ -133,6 +138,7 @@ function acceptAdultGate() {
   document.documentElement.classList.remove("adult-gate-required");
   if (adultGate) adultGate.setAttribute("aria-hidden", "true");
   setAppBackgroundInert(false);
+  requestAnimationFrame(showFirstUseGuideIfNeeded);
 }
 
 function leaveAdultGate() {
@@ -168,7 +174,7 @@ function closeInfoModal() {
 }
 
 function setAppBackgroundInert(active) {
-  for (const el of [document.querySelector("header"), document.querySelector("main"), document.querySelector("footer.site-footer")]) {
+  for (const el of [document.querySelector("header"), document.querySelector("main"), document.querySelector("footer.site-footer"), document.querySelector(".merge-review-banner")]) {
     if (el && "inert" in el) el.inert = !!active;
   }
 }
@@ -202,6 +208,8 @@ function setLanguage(lang, persist = true) {
   renderLanguageButtons();
   updateHelpLanguage();
   updateAdultInfoLanguage();
+  updateFirstUseGuideLanguage();
+  updateMergeReviewBannerLanguage();
   renderCategoryControls();
   renderExperienceModeUI();
   renderRoleUI();
@@ -738,6 +746,7 @@ const sessionToggleReadOnly = document.getElementById("sessionToggleReadOnly");
 const experienceSwitch = document.getElementById("experienceSwitch");
 const quickCollapseAllCategoriesBtn = document.getElementById("quickCollapseAllCategories");
 const quickExpandAllCategoriesBtn = document.getElementById("quickExpandAllCategories");
+const allTools = document.getElementById("allTools");
 
 let modifiedScopes = { sub:"", dom:"", common:"" };
 try {
@@ -1057,6 +1066,180 @@ function applyReadOnlyToSafety() {
 }
 
 
+function firstUseGuideCopy() {
+  if (currentLang === "fr") {
+    return {
+      kicker:"Première utilisation",
+      title:"Remplissez d’abord séparément, puis fusionnez",
+      intro:"Pour limiter l’influence des réponses de l’autre, le plus simple est que chacun remplisse sa partie de son côté, idéalement sur son propre appareil.",
+      cards:[
+        ["1 · Chacun de son côté","L’homme renseigne ses rôles Soumis + Maître ; la femme renseigne ses rôles Maîtresse + Soumise. Remplissez surtout Préférence, Déjà fait avant et Après expérience sans consulter les réponses de l’autre."],
+        ["2 · Données communes pendant le remplissage","Notes : chacun écrit seulement sa ligne F: ou H:. « Fait ensemble » peut être renseigné sur l’un ou l’autre appareil. Sécurité / limites / aftercare peuvent être notés par chacun et seront fusionnés prudemment."],
+        ["3 · Fusionnez avec les sauvegardes","Exportez 🔵 Homme ou 🟣 Femme, envoyez le fichier JSON à l’autre appareil puis utilisez 📂 Restaurer. L’import ajoute la personne concernée dans les deux dynamiques sans écraser les réponses personnelles de l’autre."],
+        ["4 · Vérifiez ensemble avant une séance","Après fusion, relisez ensemble « Fait ensemble », les notes F:/H: et surtout Sécurité / limites / aftercare. Construisez ensuite la séance sur l’appareil de référence."]
+      ],
+      local:"Séance, ordre de séance, niveau d’exploration, affichage et réglages du tirage restent locaux lors d’un échange Homme/Femme. Si vous voulez ensuite avoir exactement la même base sur les deux appareils, créez une sauvegarde 💾 Complète depuis l’appareil fusionné et restaurez-la sur l’autre.",
+      understand:"J’ai compris",
+      guide:"Lire le mode d’emploi complet",
+      once:"Ce message n’apparaît automatiquement qu’une fois sur cet appareil. Le mode d’emploi reste accessible avec « ? »."
+    };
+  }
+  return {
+    kicker:"First use",
+    title:"Fill your answers separately first, then merge",
+    intro:"To reduce influence from the other person’s answers, each person should ideally fill their own part separately, preferably on their own device.",
+    cards:[
+      ["1 · Fill separately","The man fills his Submissive + Master roles; the woman fills her Domme + Submissive roles. Focus on Preference, Done before and After experience without checking the other person’s answers."],
+      ["2 · Shared data while filling","Notes: each person edits only their F: or M: line. Done together may be entered on either device. Safety / limits / aftercare can be entered by each person and are merged conservatively."],
+      ["3 · Merge with backups","Export 🔵 Male or 🟣 Female, send the JSON file to the other device, then use 📂 Restore. The import adds that person across both dynamics without overwriting the other person’s personal answers."],
+      ["4 · Review together before a session","After merging, review Done together, F:/M: notes and especially Safety / limits / aftercare together. Then build the session on the reference device."]
+    ],
+    local:"Session selection/order, exploration level, display and random-draw settings remain local during Male/Female exchanges. If you later want both devices to contain the exact same merged state, create a 💾 Full backup on the merged device and restore it on the other.",
+    understand:"Got it",
+    guide:"Read the complete user guide",
+    once:"This message is shown automatically only once on this device. The complete guide remains available from “?”."
+  };
+}
+
+function ensureFirstUseGuide() {
+  if (onboardingModal) return;
+  const wrap = document.createElement("div");
+  wrap.className = "first-use-modal";
+  wrap.hidden = true;
+  wrap.setAttribute("aria-hidden", "true");
+  wrap.innerHTML = `<div class="first-use-backdrop"></div>
+    <section class="first-use-dialog" role="dialog" aria-modal="true" aria-labelledby="firstUseTitle">
+      <div class="first-use-kicker" data-first-use-kicker></div>
+      <h2 id="firstUseTitle" data-first-use-title></h2>
+      <p class="first-use-intro" data-first-use-intro></p>
+      <div class="first-use-grid" data-first-use-grid></div>
+      <p class="first-use-local" data-first-use-local></p>
+      <div class="first-use-actions">
+        <button class="first-use-primary" type="button" data-first-use-understand></button>
+        <button class="first-use-secondary" type="button" data-first-use-guide></button>
+      </div>
+      <p class="first-use-once" data-first-use-once></p>
+    </section>`;
+  document.body.appendChild(wrap);
+  onboardingModal = wrap;
+  onboardingDialog = wrap.querySelector(".first-use-dialog");
+
+  wrap.querySelector("[data-first-use-understand]").addEventListener("click", () => closeFirstUseGuide(true));
+  wrap.querySelector("[data-first-use-guide]").addEventListener("click", () => {
+    closeFirstUseGuide(true, false);
+    openHelpModal();
+  });
+  updateFirstUseGuideLanguage();
+}
+
+function updateFirstUseGuideLanguage() {
+  if (!onboardingModal) return;
+  const c = firstUseGuideCopy();
+  onboardingModal.querySelector("[data-first-use-kicker]").textContent = c.kicker;
+  onboardingModal.querySelector("[data-first-use-title]").textContent = c.title;
+  onboardingModal.querySelector("[data-first-use-intro]").textContent = c.intro;
+  onboardingModal.querySelector("[data-first-use-local]").textContent = c.local;
+  onboardingModal.querySelector("[data-first-use-understand]").textContent = c.understand;
+  onboardingModal.querySelector("[data-first-use-guide]").textContent = c.guide;
+  onboardingModal.querySelector("[data-first-use-once]").textContent = c.once;
+  onboardingModal.querySelector("[data-first-use-grid]").innerHTML = c.cards.map(([title,text]) =>
+    `<div class="first-use-card"><strong>${esc(title)}</strong><span>${esc(text)}</span></div>`
+  ).join("");
+}
+
+function markFirstUseSeen() {
+  try { localStorage.setItem(ONBOARDING_KEY, "true"); } catch (_) {}
+}
+
+function closeFirstUseGuide(markSeen=true, restoreFocus=true) {
+  if (!onboardingModal || onboardingModal.hidden) return;
+  if (markSeen) markFirstUseSeen();
+  onboardingModal.hidden = true;
+  onboardingModal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("first-use-open");
+  setAppBackgroundInert(false);
+  if (restoreFocus && openHelpBtn) openHelpBtn.focus();
+}
+
+function showFirstUseGuideIfNeeded() {
+  if (document.documentElement.classList.contains("adult-gate-required")) return;
+  let seen = false;
+  try { seen = localStorage.getItem(ONBOARDING_KEY) === "true"; } catch (_) {}
+  if (seen) return;
+  ensureFirstUseGuide();
+  updateFirstUseGuideLanguage();
+  onboardingModal.hidden = false;
+  onboardingModal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("first-use-open");
+  setAppBackgroundInert(true);
+  requestAnimationFrame(() => {
+    const btn = onboardingModal.querySelector("[data-first-use-understand]");
+    if (btn) btn.focus();
+  });
+}
+
+function mergeReviewCopy(type) {
+  const whoFr = type === "male" ? "Homme" : "Femme";
+  const whoEn = type === "male" ? "Male" : "Female";
+  return currentLang === "fr" ? {
+    title:`✓ Réponses ${whoFr} fusionnées`,
+    text:"Avant de préparer une séance, vérifiez ensemble « Fait ensemble », les notes F:/H: et surtout Sécurité / limites / aftercare.",
+    open:"Vérifier la sécurité",
+    close:"Fermer"
+  } : {
+    title:`✓ ${whoEn} answers merged`,
+    text:"Before preparing a session, review Done together, F:/M: notes and especially Safety / limits / aftercare together.",
+    open:"Review safety",
+    close:"Dismiss"
+  };
+}
+
+function readPendingMergeReview() {
+  try {
+    const raw = sessionStorage.getItem(MERGE_REVIEW_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && (parsed.type === "male" || parsed.type === "female") ? parsed : null;
+  } catch (_) { return null; }
+}
+
+function updateMergeReviewBannerLanguage() {
+  if (!mergeReviewBanner) return;
+  const pending = readPendingMergeReview();
+  if (!pending) return;
+  const c = mergeReviewCopy(pending.type);
+  mergeReviewBanner.querySelector("[data-merge-title]").textContent = c.title;
+  mergeReviewBanner.querySelector("[data-merge-text]").textContent = c.text;
+  mergeReviewBanner.querySelector("[data-merge-open]").textContent = c.open;
+  mergeReviewBanner.querySelector("[data-merge-close]").textContent = c.close;
+}
+
+function dismissMergeReviewBanner() {
+  try { sessionStorage.removeItem(MERGE_REVIEW_KEY); } catch (_) {}
+  if (mergeReviewBanner) mergeReviewBanner.remove();
+  mergeReviewBanner = null;
+}
+
+function renderMergeReviewBanner() {
+  const pending = readPendingMergeReview();
+  if (!pending || mergeReviewBanner) return;
+  const banner = document.createElement("aside");
+  banner.className = "merge-review-banner";
+  banner.setAttribute("role", "status");
+  banner.innerHTML = `<div class="merge-review-copy"><strong data-merge-title></strong><span data-merge-text></span></div>
+    <div class="merge-review-actions"><button type="button" data-merge-open></button><button type="button" data-merge-close></button></div>`;
+  const header = document.querySelector("header");
+  if (header) header.insertAdjacentElement("afterend", banner); else document.body.prepend(banner);
+  mergeReviewBanner = banner;
+  updateMergeReviewBannerLanguage();
+  banner.querySelector("[data-merge-open]").addEventListener("click", () => {
+    if (allTools) allTools.open = true;
+    const safety = document.querySelector(".safety-tool-section");
+    if (safety) requestAnimationFrame(() => safety.scrollIntoView({behavior:"smooth", block:"start"}));
+  });
+  banner.querySelector("[data-merge-close]").addEventListener("click", dismissMergeReviewBanner);
+}
+
 function renderRoleUI() {
   document.body.dataset.role = currentRole;
   document.body.dataset.readonly = readOnly ? "true" : "false";
@@ -1134,6 +1317,11 @@ if (infoModal) {
 }
 
 document.addEventListener("keydown", e => {
+  if (onboardingModal && !onboardingModal.hidden) {
+    if (e.key === "Escape") { e.preventDefault(); closeFirstUseGuide(true); return; }
+    focusTrapIn(onboardingDialog, e);
+    return;
+  }
   if (document.documentElement.classList.contains("adult-gate-required")) {
     if (e.key === "Escape") { e.preventDefault(); return; }
     focusTrapIn(adultGateDialog, e);
@@ -3441,6 +3629,9 @@ importJsonFile.addEventListener("change", async () => {
     }
 
     const result = importGlobalBackup(parsed);
+    if (result.type === "male" || result.type === "female") {
+      try { sessionStorage.setItem(MERGE_REVIEW_KEY, JSON.stringify({type:result.type, at:new Date().toISOString()})); } catch (_) {}
+    }
     const label = backupTypeLabel(result.type);
     const conflictText = result.conflicts.length
       ? (currentLang === "fr" ? ` · ⚠️ ${result.conflicts.length} conflit(s) sécurité, valeur locale conservée` : ` · ⚠️ ${result.conflicts.length} safety conflict(s), local value kept`)
@@ -3618,3 +3809,5 @@ renderRoleUI();
 renderColumnControls();
 renderQuickFilters();
 render();
+renderMergeReviewBanner();
+requestAnimationFrame(showFirstUseGuideIfNeeded);

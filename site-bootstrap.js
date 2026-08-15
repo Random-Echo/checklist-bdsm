@@ -1,6 +1,7 @@
 window.CHECKLIST_SITE = Object.freeze({
   languageKey: "bdsmChecklistSite_language_v1",
-  adultKey: "bdsmChecklistSite_adultConfirmed_v1"
+  adultKey: "bdsmChecklistSite_adultConfirmed_v1",
+  onboardingKey: "bdsmChecklistSite_firstUseGuide_v1"
 });
 
 (() => {
