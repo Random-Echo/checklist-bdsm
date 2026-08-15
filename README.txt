@@ -1,4 +1,4 @@
-CHECKLISTS D/s — v132
+CHECKLISTS D/s — v133
 
 État du projet
 - 3 pages : index.html, maitresse-soumis.html et maitre-soumise.html.
@@ -12,8 +12,8 @@ CHECKLISTS D/s — v132
 
 Structure
 - index.html : accueil et choix de la dynamique.
-- maitresse-soumis.html : Checklist Femdom 600 — Maîtresse & Soumis.
-- maitre-soumise.html : Checklist Maledom 600 — Maître & Soumise.
+- maitresse-soumis.html : Checklist Femdom — Maîtresse & Soumis.
+- maitre-soumise.html : Checklist Maledom — Maître & Soumise.
 - checklist.css : styles communs.
 - site-bootstrap.js : langue + confirmation 18+ communes.
 - checklist-engine.js : moteur fonctionnel unique.
@@ -24,9 +24,9 @@ Sauvegarde automatique locale
 - Chaque dynamique conserve son propre espace localStorage.
 - Les pratiques non renseignées ne sont pas stockées inutilement.
 - Les écritures sont différées quand c’est possible puis forcées avant masquage/quittage de la page.
-- Les anciennes sauvegardes JSON antérieures à v132 ne sont volontairement pas prises en charge.
+- Les anciennes sauvegardes JSON antérieures à v133 ne sont volontairement pas prises en charge.
 
-Sauvegardes JSON v132 — format global version 2
+Sauvegardes JSON v133 — format global version 2
 Il existe exactement 3 types de fichiers, identiques depuis les deux pages :
 - Complète : les deux checklists entières (réponses Homme + Femme, Fait ensemble, notes F:/H:, sécurité, séances, affichage et tirage).
 - Homme : réponses de l’homme dans les deux dynamiques = Soumis + Maître, sa ligne H: des notes communes, Fait ensemble et sécurité.
@@ -54,3 +54,5 @@ Responsive / performances conservés
 - Mode paysage dédié avec colonne Catégorie retirée de la zone fixe.
 - Hauteur des lignes optimisée en paysage.
 - Cache DOM, stockage sparse, scroll mobile optimisé et chargement defer conservés.
+
+- v133 : favicon bicolore ajouté à l’index, bloc Stockage retiré de l’accueil, titres rendus indépendants du nombre de pratiques et aide intégrée complétée.

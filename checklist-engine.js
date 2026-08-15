@@ -7,7 +7,7 @@ for (let i = 0; i < initialItems.length; i++) {
   if (!Number.isInteger(initialItems[i].displayIndex)) initialItems[i].displayIndex = i + 1;
 }
 const categoryColors = CHECKLIST_DATA.categoryColors;
-const APP_VERSION = "v132";
+const APP_VERSION = "v133";
 
 const LANG_KEY = window.CHECKLIST_SITE.languageKey;
 const CATEGORY_EN = CHECKLIST_DATA.categoryEn;
@@ -89,15 +89,15 @@ function updateHelpLanguage() {
   });
 
   if (currentLang === "fr") {
-    helpKicker.textContent = "Guide intégré";
-    helpTitle.textContent = "Comment utiliser la checklist ?";
+    helpKicker.textContent = "Mode d’emploi";
+    helpTitle.textContent = "Mode d’emploi complet";
     openHelpBtn.setAttribute("aria-label", "Aide");
     openHelpBtn.title = "Aide";
     closeHelpBtn.setAttribute("aria-label", "Fermer");
     closeHelpBtn.title = "Fermer";
   } else {
-    helpKicker.textContent = "Built-in guide";
-    helpTitle.textContent = "How to use the checklist";
+    helpKicker.textContent = "User guide";
+    helpTitle.textContent = "Complete user guide";
     openHelpBtn.setAttribute("aria-label", "Help");
     openHelpBtn.title = "Help";
     closeHelpBtn.setAttribute("aria-label", "Close");
@@ -213,7 +213,7 @@ function setLanguage(lang, persist = true) {
   updateCompatibilityIndicator();
 }
 
-// Espaces de stockage des deux dynamiques. La sauvegarde v132 est globale au couple.
+// Espaces de stockage séparés pour les deux dynamiques ; les sauvegardes globales regroupent les deux.
 const SITE_VARIANTS = Object.freeze({
   "maitresse-soumis": Object.freeze({
     id:"maitresse-soumis", storageNamespace:"femdomChecklistFRInteractive", storagePrefix:"femdom",
@@ -2246,7 +2246,7 @@ function render() {
   let syncIndex = 0;
 
   // Les groupes de catégories sont statiques : on réutilise l'index construit au chargement
-  // au lieu de recréer une Map et 600 associations à chaque filtre / rendu.
+  // au lieu de recréer une Map et toutes les associations à chaque filtre / rendu.
   for (const categoryName of allCatalogCategories) {
     const sourceItems = itemsByCategory.get(categoryName) || [];
     const categoryItems = [];
@@ -2343,7 +2343,7 @@ function updateMobileCategoryBar() {
   let index = Math.min(mobileCategoryIndex, candidates.length - 1);
 
   // Le scroll est presque toujours local : on avance/revient depuis le dernier élément
-  // au lieu de reparcourir jusqu’à 600 lignes à chaque frame.
+  // au lieu de reparcourir toutes les lignes à chaque frame.
   while (index + 1 < candidates.length &&
          candidates[index].offsetTop + candidates[index].offsetHeight <= scrollTop) {
     index++;
@@ -3287,8 +3287,8 @@ function validateGlobalBackup(payload) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new Error(t("invalidBackup"));
   if (payload.version !== BACKUP_FORMAT_VERSION || payload.siteBackupId !== SITE_BACKUP_ID) {
     throw new Error(currentLang === "fr"
-      ? "Sauvegarde incompatible : seul le format global v132 ou supérieur est accepté."
-      : "Incompatible backup: only the global v132-or-later format is accepted.");
+      ? "Sauvegarde incompatible : seul le format global actuel est accepté."
+      : "Incompatible backup: only the current global format is accepted.");
   }
   const type = normalizeBackupType(payload);
   if (!type || !payload.variants || typeof payload.variants !== "object") throw new Error(t("invalidBackup"));
