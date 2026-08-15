@@ -5,12 +5,12 @@
 <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
 <title>Checklist Femdom 600 — Maîtresse &amp; Soumis</title>
 <link href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%23263238%27/%3E%3Cpath d=%27M13 23l10 9 9-17 9 17 10-9-5 25H18z%27 fill=%27%23C06A9C%27/%3E%3Ccircle cx=%2713%27 cy=%2721%27 r=%274%27 fill=%27%23E8F2F7%27/%3E%3Ccircle cx=%2732%27 cy=%2712%27 r=%274%27 fill=%27%23E8F2F7%27/%3E%3Ccircle cx=%2751%27 cy=%2721%27 r=%274%27 fill=%27%23E8F2F7%27/%3E%3C/svg%3E" rel="icon" type="image/svg+xml"/>
-<link href="checklist.css?v=131" rel="stylesheet"/>
-<script>window.CHECKLIST_VARIANT = Object.freeze({"id":"maitresse-soumis","visualRoleOrder":["sub","dom"],"storageNamespace":"femdomChecklistFRInteractive","storagePrefix":"femdom","backupFilenamePrefix":"Checklist_Femdom_600_Maitresse_Soumis","fileRoleLabels":{"fr":{"sub":"Soumis","dom":"Maîtresse"},"en":{"sub":"Submissive","dom":"Domme"}}});</script><script src="site-bootstrap.js?v=131"></script>
-<script defer src="maitresse-soumis.js?v=131"></script>
-<script defer src="checklist-engine.js?v=131"></script>
+<link href="checklist.css?v=132" rel="stylesheet"/>
+<script>window.CHECKLIST_VARIANT = Object.freeze({"id":"maitresse-soumis","visualRoleOrder":["sub","dom"],"storageNamespace":"femdomChecklistFRInteractive","storagePrefix":"femdom"});</script><script src="site-bootstrap.js?v=132"></script>
+<script defer src="maitresse-soumis.js?v=132"></script>
+<script defer src="checklist-engine.js?v=132"></script>
 </head>
-<!-- Checklist Femdom 600 v131 -->
+<!-- Checklist Femdom 600 v132 -->
 <body data-checklist-id="maitresse-soumis" data-role="sub">
 <div aria-labelledby="adultGateTitleFr" aria-modal="true" class="adult-gate" id="adultGate" role="dialog">
 <div aria-hidden="true" class="adult-gate-backdrop"></div>
@@ -43,7 +43,7 @@
 <header>
 <div class="top">
 <div class="title-role-row">
-<h1><span data-i18n="appTitle">Checklist Femdom 600 — Maîtresse &amp; Soumis</span> <span class="version-badge">v131</span> <span class="title-extra" data-i18n="titleExtra"></span></h1>
+<h1><span data-i18n="appTitle">Checklist Femdom 600 — Maîtresse &amp; Soumis</span> <span class="version-badge">v132</span> <span class="title-extra" data-i18n="titleExtra"></span></h1>
 <div class="title-actions">
 <a aria-label="Accueil / Home" class="home-button" href="index.html" title="Accueil / Home"><span class="adult-lang-fr">⌂ Accueil</span><span class="adult-lang-en">⌂ Home</span></a>
 <div aria-label="Rôle actif" class="role-switch" data-i18n-aria-label="activeRoleAria" role="group">
@@ -94,7 +94,7 @@
 </div>
 </section>
 <section class="tool-section filters-backup-section">
-<h2 data-i18n="filtersBackup">🔎 Filtres &amp; sauvegarde</h2>
+<h2 data-i18n="filtersBackup">🔎 Filtres &amp; sauvegardes</h2>
 <div class="toolbar">
 <input aria-label="Rechercher une pratique, une explication ou une note" data-i18n-aria-label="searchPlaceholder" data-i18n-placeholder="searchPlaceholder" id="search" placeholder="Rechercher une pratique, une explication ou une note…" type="search"/>
 <select aria-label="Toutes les catégories" data-i18n-aria-label="allCategories" id="category"><option data-i18n="allCategories" value="">Toutes les catégories</option></select>
@@ -125,12 +125,10 @@
 <button class="action restore-backup" data-i18n="restore" id="importJson" type="button">📂 Restaurer</button>
 <input accept=".json,application/json,text/json" hidden="" id="importJsonFile" type="file"/>
 <button class="action full-backup" data-i18n="backupFull" id="exportFull" type="button">💾 Complète</button>
-<button class="action sub-backup" data-i18n="backupSub" id="exportSub" type="button">🔵 Soumis</button>
-<button class="action dom-backup" data-i18n="backupDom" id="exportDom" type="button">🟣 Maîtresse</button>
+<button class="action male-backup" data-i18n="backupMale" id="exportMale" type="button">🔵 Homme</button>
+<button class="action female-backup" data-i18n="backupFemale" id="exportFemale" type="button">🟣 Femme</button>
 </div>
-<div class="backup-hint" data-i18n="backupHint">
-              Complète = tout · Soumis/Maîtresse = réponses du rôle + « Fait ensemble » + sécurité (fusion prudente).
-            </div>
+<div class="backup-hint" data-i18n="backupHint">Complète = les 2 checklists · Homme = Soumis + Maître · Femme = Maîtresse + Soumise · notes F:/H: et sécurité fusionnées.</div>
 <div class="exchange-info" id="exchangeInfo">Dernier échange : aucun</div>
 </div>
 <div class="stats">
@@ -317,7 +315,7 @@
 </div>
 <div class="help-card">
 <strong>Commun</strong>
-<span>Les deux peuvent modifier : Fait ensemble, Notes communes, sélection de séance et sécurité.</span>
+<span>Les deux peuvent modifier : Fait ensemble, sélection de séance et sécurité. Les notes communes affichent F: et H: ; chacun modifie uniquement sa propre ligne.</span>
 </div>
 </div>
 <p>Les colonnes de l’autre rôle peuvent rester visibles mais sont verrouillées. Le bouton <strong>👁 Masquer</strong> permet de les cacher.</p>
@@ -374,27 +372,19 @@
 <p><strong>Reset séance</strong> vide la sélection après confirmation, sans supprimer les notes ni l’historique.</p>
 </section>
 <section class="help-section" id="help-fr-backups">
-<h3>7. Sauvegardes et échange entre appareils</h3>
-<p>Les modifications sont enregistrées automatiquement <strong>sur l’appareil</strong>. Les fichiers JSON permettent de sauvegarder ou d’échanger les réponses.</p>
-<p><strong>Confidentialité :</strong> les sauvegardes JSON sont en clair et ne sont pas chiffrées. Conservez-les dans un emplacement privé.</p>
+<h3>7. Sauvegardes — Homme / Femme / Complète</h3>
+<p>Les modifications sont enregistrées automatiquement <strong>sur l’appareil</strong>. Les trois sauvegardes JSON sont <strong>globales au couple</strong> : elles fonctionnent de la même façon depuis Maîtresse &amp; Soumis ou Maître &amp; Soumise.</p>
 <div class="help-grid">
-<div class="help-card">
-<strong>💾 Complète</strong>
-<span>Toutes les réponses, notes communes, sécurité, séance, ordre, préférences d’affichage et état du tirage aléatoire.</span>
+<div class="help-card"><strong>💾 Complète</strong><span>Contient les deux checklists entières : réponses Homme et Femme, « Fait ensemble », notes F:/H:, sécurité, séances et ordre, niveau d’exploration, affichage et état du tirage aléatoire.</span></div>
+<div class="help-card"><strong>🔵 Homme</strong><span>Contient les réponses de l’homme dans les deux dynamiques : <strong>Soumis</strong> dans Maîtresse &amp; Soumis + <strong>Maître</strong> dans Maître &amp; Soumise, ainsi que sa ligne <strong>H:</strong> des notes communes, « Fait ensemble » et la sécurité.</span></div>
+<div class="help-card"><strong>🟣 Femme</strong><span>Contient les réponses de la femme dans les deux dynamiques : <strong>Maîtresse</strong> dans Maîtresse &amp; Soumis + <strong>Soumise</strong> dans Maître &amp; Soumise, ainsi que sa ligne <strong>F:</strong> des notes communes, « Fait ensemble » et la sécurité.</span></div>
 </div>
-<div class="help-card">
-<strong>🔵 Soumis</strong>
-<span>Préférence Soumis (dont ⭐ Favori), Déjà fait avant — Soumis, Après expérience Soumis, Fait ensemble et sécurité.</span>
-</div>
-<div class="help-card">
-<strong>🟣 Maîtresse</strong>
-<span>Préférence Maîtresse (dont 👑 Favori), Déjà fait avant — Maîtresse, Après expérience Maîtresse, Fait ensemble et sécurité.</span>
-</div>
-</div>
-<p>Un fichier individuel ne modifie jamais les réponses appartenant à l’autre rôle.</p>
-<p>Pour <strong>Fait ensemble</strong>, les imports individuels sont additifs : un Oui importé peut ajouter l’information, mais un Non importé ne peut pas effacer un Oui déjà présent.</p>
-<p>La <strong>sécurité</strong> est aussi fusionnée prudemment : une valeur vide n’efface rien, les règles protectrices restent actives, les hard limits/aftercare sont conservés des deux côtés et un conflit de safeword ou de signal garde la valeur locale.</p>
-<p><strong>Restaurer</strong> détecte automatiquement le type de fichier et affiche ce qui sera modifié. Si le fichier semble plus ancien que les données locales correspondantes, un avertissement apparaît.</p>
+<p><strong>Notes communes :</strong> elles sont stockées séparément pour chaque personne mais affichées dans la même zone, avec <strong>F:</strong> puis <strong>H:</strong>. Seule la ligne de la personne correspondant au rôle actif est modifiable. Un import Femme remplace uniquement la ligne F: ; un import Homme remplace uniquement la ligne H:. La ligne de l’autre personne n’est jamais écrasée.</p>
+<p><strong>« Fait ensemble » :</strong> lors d’un import Homme/Femme, la fusion est additive. Un Oui importé est conservé ; un Non ou une absence dans le fichier ne peut pas effacer un Oui déjà présent localement.</p>
+<p><strong>Sécurité :</strong> lors d’un import Homme/Femme, les valeurs vides n’effacent rien, les protections les plus strictes restent actives, les hard limits et l’aftercare des deux appareils sont réunis. Si deux safewords ou signaux différents sont renseignés, la valeur locale est conservée et le conflit est signalé.</p>
+<p><strong>Import Homme/Femme :</strong> remplace uniquement les réponses personnelles concernées sur les deux checklists. Les réponses de l’autre personne, les séances, leur ordre, l’affichage et le tirage aléatoire restent intacts. <strong>Import Complète :</strong> remplace entièrement les deux checklists par le contenu du fichier.</p>
+<p><strong>Confidentialité :</strong> les fichiers JSON sont en clair et ne sont pas chiffrés. Conservez-les dans un emplacement privé.</p>
+<p><strong>Restaurer</strong> détecte automatiquement s’il s’agit d’une sauvegarde Homme, Femme ou Complète et affiche précisément ce qui sera modifié avant confirmation.</p>
 </section>
 <section class="help-section" id="help-fr-ds">
 <h3>Ownership et discipline</h3>
@@ -408,7 +398,7 @@
 <section class="help-section" id="help-fr-safety">
 <h3>8. 🛡️ Sécurité, limites et aftercare</h3>
 <p>Cette section permet de conserver : safeword de ralentissement, safeword d’arrêt, signaux non verbaux, marques acceptées, hard limits, aftercare, règles photos/vidéos, alcool/intoxication et débrief.</p>
-<p>Ces éléments sont communs au couple et sont inclus dans la <strong>sauvegarde complète</strong>.</p>
+<p>Ces éléments sont communs au couple : la sauvegarde Complète les restaure, tandis que les sauvegardes Homme/Femme les transportent et les fusionnent prudemment à l’import.</p>
 <p>Les rôles, protocoles et scénarios CNC ne remplacent jamais le consentement actuel : un 🚫, un safeword ou un signal d’arrêt reste prioritaire. Les besoins physiologiques essentiels ne doivent pas être retardés.</p>
 <p>Les pratiques impliquant des tiers ou un cadre public supposent le consentement des personnes concernées et le respect du cadre légal.</p>
 </section>
@@ -423,7 +413,7 @@
 <p><strong>Reset séance</strong> ne supprime que la sélection de séance.</p>
 <p><strong>Réinitialiser la checklist</strong> efface les réponses, notes, marqueurs, historique de tirage, sélection de séance et réglages de sécurité après confirmation. Une sauvegarde complète est recommandée avant une réinitialisation volontaire.</p>
 </section>
-<div class="help-end">Fin du guide · v131</div>
+<div class="help-end">Fin du guide · v132</div>
 </div>
 <div class="help-lang" data-help-lang="en" hidden="">
 <p class="help-intro">
@@ -469,7 +459,7 @@
 </div>
 <div class="help-card">
 <strong>Shared</strong>
-<span>Both can edit: Done together, Shared notes, session selection and safety settings.</span>
+<span>Both can edit: Done together, session selection and safety settings. Shared notes display F: and M:; each person edits only their own line.</span>
 </div>
 </div>
 <p>The other role’s columns can remain visible but are locked. The <strong>👁 Hide</strong> button can hide them.</p>
@@ -526,27 +516,19 @@
 <p><strong>Reset session</strong> clears the selection after confirmation without deleting ratings or history.</p>
 </section>
 <section class="help-section" id="help-en-backups">
-<h3>7. Backups and exchanging data between devices</h3>
-<p>Changes are saved automatically <strong>on the device</strong>. JSON files are used for external backup or exchanging answers.</p>
-<p><strong>Privacy:</strong> JSON backups are plain text and are not encrypted. Store them in a private location.</p>
+<h3>7. Backups — Male / Female / Full</h3>
+<p>Changes are saved automatically <strong>on the device</strong>. The three JSON backups are <strong>couple-wide</strong>: they work the same way from either Domme &amp; Submissive or Master &amp; Submissive.</p>
 <div class="help-grid">
-<div class="help-card">
-<strong>💾 Full</strong>
-<span>All answers, shared notes, safety, session order, display preferences and random-draw state.</span>
+<div class="help-card"><strong>💾 Full</strong><span>Contains both complete checklists: Male and Female answers, Done together, F:/M: notes, safety, sessions and order, exploration level, display settings and random-draw state.</span></div>
+<div class="help-card"><strong>🔵 Male</strong><span>Contains the man’s answers in both dynamics: <strong>Submissive</strong> in Domme &amp; Submissive + <strong>Master</strong> in Master &amp; Submissive, plus his <strong>M:</strong> shared-note line, Done together and safety.</span></div>
+<div class="help-card"><strong>🟣 Female</strong><span>Contains the woman’s answers in both dynamics: <strong>Domme</strong> in Domme &amp; Submissive + <strong>Submissive</strong> in Master &amp; Submissive, plus her <strong>F:</strong> shared-note line, Done together and safety.</span></div>
 </div>
-<div class="help-card">
-<strong>🔵 Submissive</strong>
-<span>Submissive preference (including ⭐ Favorite), Done before — Submissive, Submissive After experience, Done together and safety.</span>
-</div>
-<div class="help-card">
-<strong>🟣 Domme</strong>
-<span>Domme preference (including 👑 Favorite), Done before — Domme, Domme After experience, Done together and safety.</span>
-</div>
-</div>
-<p>An individual backup never changes answers owned by the other role.</p>
-<p>For <strong>Done together</strong>, individual imports are additive: an imported Yes can add the information, but an imported No cannot erase an existing local Yes.</p>
-<p><strong>Safety</strong> is also merged carefully: empty values erase nothing, protective rules stay enabled, hard limits/aftercare from both sides are preserved, and a safeword or signal conflict keeps the local value.</p>
-<p><strong>Restore</strong> automatically detects the backup type and explains what will change. If the file appears older than the corresponding local data, a warning is shown.</p>
+<p><strong>Shared notes:</strong> each person’s contribution is stored separately but displayed in the same area, with <strong>F:</strong> then <strong>M:</strong>. Only the line belonging to the person represented by the active role is editable. A Female import replaces only F:; a Male import replaces only M:. The other person’s line is never overwritten.</p>
+<p><strong>Done together:</strong> Male/Female imports are additive. An imported Yes is kept; an imported No or a missing value cannot erase a local Yes.</p>
+<p><strong>Safety:</strong> on Male/Female import, empty values erase nothing, the most protective settings stay enabled, and hard limits/aftercare from both devices are combined. If two different safewords or signals exist, the local value is kept and the conflict is reported.</p>
+<p><strong>Male/Female import:</strong> replaces only that person’s answers across both checklists. The other person’s answers, sessions/order, display settings and random-draw state stay untouched. <strong>Full import:</strong> completely replaces both checklists with the file contents.</p>
+<p><strong>Privacy:</strong> JSON backups are plain text and are not encrypted. Store them in a private location.</p>
+<p><strong>Restore</strong> automatically detects Male, Female or Full and explains exactly what will change before confirmation.</p>
 </section>
 <section class="help-section" id="help-en-ds">
 <h3>Ownership and discipline</h3>
@@ -560,7 +542,7 @@
 <section class="help-section" id="help-en-safety">
 <h3>8. 🛡️ Safety, limits and aftercare</h3>
 <p>This section stores: slow-down safeword, stop safeword, non-verbal signals, accepted marks, hard limits, aftercare, photo/video rules, alcohol/intoxication rule and next-day debrief.</p>
-<p>These settings are shared by the couple and included in the <strong>Full backup</strong>.</p>
+<p>These settings are shared by the couple: Full restores them, while Male/Female backups carry them and merge them conservatively on import.</p>
 <p>Roles, protocols and CNC scenarios never replace current consent: a 🚫 limit, safeword or stop signal always takes priority. Essential physical needs must not be delayed.</p>
 <p>Practices involving third parties or public settings require the consent of the people involved and compliance with applicable law.</p>
 </section>
@@ -575,7 +557,7 @@
 <p><strong>Reset session</strong> only clears the session selection.</p>
 <p><strong>Reset checklist</strong> clears answers, notes, markers, random-draw history, session selection and safety settings after confirmation. Creating a Full backup first is recommended before an intentional reset.</p>
 </section>
-<div class="help-end">End of guide · v131</div>
+<div class="help-end">End of guide · v132</div>
 </div>
 </div>
 </section>

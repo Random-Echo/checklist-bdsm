@@ -7,7 +7,7 @@ for (let i = 0; i < initialItems.length; i++) {
   if (!Number.isInteger(initialItems[i].displayIndex)) initialItems[i].displayIndex = i + 1;
 }
 const categoryColors = CHECKLIST_DATA.categoryColors;
-const APP_VERSION = "v131";
+const APP_VERSION = "v132";
 
 const LANG_KEY = window.CHECKLIST_SITE.languageKey;
 const CATEGORY_EN = CHECKLIST_DATA.categoryEn;
@@ -213,25 +213,45 @@ function setLanguage(lang, persist = true) {
   updateCompatibilityIndicator();
 }
 
-// Moteur commun : chaque variante fournit son propre espace de stockage.
-const VARIANT_STORAGE_KEYS = Object.freeze({
-  items: `${CHECKLIST_VARIANT.storageNamespace}_v1`,
-  safety: `${CHECKLIST_VARIANT.storageNamespace}_safety_v1`,
-  columns: `${CHECKLIST_VARIANT.storageNamespace}_columns_v5`,
-  role: `${CHECKLIST_VARIANT.storageNamespace}_role_v1`,
-  otherRoleColumns: `${CHECKLIST_VARIANT.storageNamespace}_otherRoleColumns_v1`,
-  readOnly: `${CHECKLIST_VARIANT.storageNamespace}_readOnly_v1`,
-  lastModified: `${CHECKLIST_VARIANT.storageNamespace}_lastModified_v1`,
-  lastExchange: `${CHECKLIST_VARIANT.storageNamespace}_lastExchange_v1`,
-  session: `${CHECKLIST_VARIANT.storageNamespace}_session_v1`,
-  modifiedScopes: `${CHECKLIST_VARIANT.storageNamespace}_modifiedScopes_v1`,
-  experienceMode: `${CHECKLIST_VARIANT.storagePrefix}Checklist_experienceMode_v1`,
-  collapsedCategories: `${CHECKLIST_VARIANT.storagePrefix}Checklist_collapsedCategories_v1`,
-  randomPrefs: `${CHECKLIST_VARIANT.storagePrefix}Checklist_randomPrefs_v1`,
-  randomHistory: `${CHECKLIST_VARIANT.storagePrefix}Checklist_randomHistory_v1`
+// Espaces de stockage des deux dynamiques. La sauvegarde v132 est globale au couple.
+const SITE_VARIANTS = Object.freeze({
+  "maitresse-soumis": Object.freeze({
+    id:"maitresse-soumis", storageNamespace:"femdomChecklistFRInteractive", storagePrefix:"femdom",
+    maleRole:"sub", femaleRole:"dom"
+  }),
+  "maitre-soumise": Object.freeze({
+    id:"maitre-soumise", storageNamespace:"maledomChecklistFRInteractive", storagePrefix:"maledom",
+    maleRole:"dom", femaleRole:"sub"
+  })
 });
+const SITE_BACKUP_ID = "bdsm-checklists-couple";
+const BACKUP_FORMAT_VERSION = 2;
+
+function storageKeysForVariant(def) {
+  return Object.freeze({
+    items: `${def.storageNamespace}_v1`,
+    safety: `${def.storageNamespace}_safety_v1`,
+    columns: `${def.storageNamespace}_columns_v5`,
+    role: `${def.storageNamespace}_role_v1`,
+    otherRoleColumns: `${def.storageNamespace}_otherRoleColumns_v1`,
+    readOnly: `${def.storageNamespace}_readOnly_v1`,
+    lastModified: `${def.storageNamespace}_lastModified_v1`,
+    lastExchange: `${def.storageNamespace}_lastExchange_v1`,
+    session: `${def.storageNamespace}_session_v1`,
+    modifiedScopes: `${def.storageNamespace}_modifiedScopes_v1`,
+    experienceMode: `${def.storagePrefix}Checklist_experienceMode_v1`,
+    collapsedCategories: `${def.storagePrefix}Checklist_collapsedCategories_v1`,
+    randomPrefs: `${def.storagePrefix}Checklist_randomPrefs_v1`,
+    randomHistory: `${def.storagePrefix}Checklist_randomHistory_v1`
+  });
+}
+
+const CURRENT_VARIANT_DEF = SITE_VARIANTS[CHECKLIST_VARIANT.id];
+if (!CURRENT_VARIANT_DEF) throw new Error("Unknown checklist variant.");
+const VARIANT_STORAGE_KEYS = storageKeysForVariant(CURRENT_VARIANT_DEF);
+const MALE_ROLE = CURRENT_VARIANT_DEF.maleRole;
+const FEMALE_ROLE = CURRENT_VARIANT_DEF.femaleRole;
 const STORAGE_KEY = VARIANT_STORAGE_KEYS.items;
-const BACKUP_VARIANT_ID = CHECKLIST_VARIANT.id;
 const SAFETY_KEY = VARIANT_STORAGE_KEYS.safety;
 const COLUMN_PREFS_KEY = VARIANT_STORAGE_KEYS.columns;
 const ROLE_KEY = VARIANT_STORAGE_KEYS.role;
@@ -376,7 +396,8 @@ function normalizeItem(base, saved={}) {
     doneTogether,
     afterSub: (priorSub || doneTogether) ? validScore(saved.afterSub) : null,
     afterDom: (priorDom || doneTogether) ? validScore(saved.afterDom) : null,
-    notes: typeof saved.notes === "string" ? saved.notes : "",
+    noteMale: typeof saved.noteMale === "string" ? saved.noteMale : "",
+    noteFemale: typeof saved.noteFemale === "string" ? saved.noteFemale : "",
     randomizable: base.randomizable !== false,
     level: Number.isInteger(base.level) ? base.level : 3,
     risk: ["normal","caution","high"].includes(base.risk) ? base.risk : "normal"
@@ -404,20 +425,6 @@ let mobileCategoryCandidates = [];
 let mobileCategoryHasRows = false;
 let mobileCategoryIndex = 0;
 
-function compactUserState(item) {
-  return {
-    id:Number(item.id),
-    wantSub:Number.isInteger(item.wantSub) ? item.wantSub : null,
-    wantDom:Number.isInteger(item.wantDom) ? item.wantDom : null,
-    priorSub:!!item.priorSub,
-    priorDom:!!item.priorDom,
-    doneTogether:!!item.doneTogether,
-    afterSub:Number.isInteger(item.afterSub) ? item.afterSub : null,
-    afterDom:Number.isInteger(item.afterDom) ? item.afterDom : null,
-    notes:typeof item.notes === "string" ? item.notes : ""
-  };
-}
-
 function compactLocalUserState(item) {
   const state = { id:Number(item.id) };
   if (Number.isInteger(item.wantSub)) state.wantSub = item.wantSub;
@@ -427,7 +434,8 @@ function compactLocalUserState(item) {
   if (item.doneTogether) state.doneTogether = true;
   if (Number.isInteger(item.afterSub)) state.afterSub = item.afterSub;
   if (Number.isInteger(item.afterDom)) state.afterDom = item.afterDom;
-  if (typeof item.notes === "string" && item.notes) state.notes = item.notes;
+  if (typeof item.noteMale === "string" && item.noteMale) state.noteMale = item.noteMale;
+  if (typeof item.noteFemale === "string" && item.noteFemale) state.noteFemale = item.noteFemale;
   return state;
 }
 
@@ -435,7 +443,8 @@ function hasLocalUserState(item) {
   return Number.isInteger(item.wantSub) || Number.isInteger(item.wantDom) ||
     !!item.priorSub || !!item.priorDom || !!item.doneTogether ||
     Number.isInteger(item.afterSub) || Number.isInteger(item.afterDom) ||
-    (typeof item.notes === "string" && item.notes.length > 0);
+    (typeof item.noteMale === "string" && item.noteMale.length > 0) ||
+    (typeof item.noteFemale === "string" && item.noteFemale.length > 0);
 }
 
 function serializeLocalItems() {
@@ -624,8 +633,8 @@ const quickFilters = document.getElementById("quickFilters");
 const importJsonBtn = document.getElementById("importJson");
 const importJsonFile = document.getElementById("importJsonFile");
 const exportFullBtn = document.getElementById("exportFull");
-const exportSubBtn = document.getElementById("exportSub");
-const exportDomBtn = document.getElementById("exportDom");
+const exportMaleBtn = document.getElementById("exportMale");
+const exportFemaleBtn = document.getElementById("exportFemale");
 const resetChecklistBtn = document.getElementById("resetChecklist");
 const mobileCategoryBar = document.getElementById("mobileCategoryBar");
 const mobileCategoryText = document.getElementById("mobileCategoryText");
@@ -780,90 +789,178 @@ const quickFilterDefs = [
 
 
 function normalizeBackupType(payload) {
-  return payload && typeof payload === "object" && ["full","sub","dom"].includes(payload.backupType)
+  return payload && typeof payload === "object" && ["full","male","female"].includes(payload.backupType)
     ? payload.backupType
     : null;
 }
 
-
 function backupTypeLabel(type) {
-  if (type === "sub") return roleLabel("sub");
-  if (type === "dom") return roleLabel("dom");
+  if (type === "male") return currentLang === "fr" ? "Homme" : "Male";
+  if (type === "female") return currentLang === "fr" ? "Femme" : "Female";
   return currentLang === "fr" ? "Complète" : "Full";
 }
 
-function relevantLocalModifiedAt(type) {
-  if (type === "sub") return modifiedScopes.sub || "";
-  if (type === "dom") return modifiedScopes.dom || "";
-  return lastModifiedAt || "";
-}
-
-function incomingRelevantModifiedAt(payload, type) {
-  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return "";
-  if (type === "sub" || type === "dom") {
-    if (typeof payload.scopeModifiedAt === "string") return payload.scopeModifiedAt;
-    if (payload.modifiedAtByScope && typeof payload.modifiedAtByScope[type] === "string") {
-      return payload.modifiedAtByScope[type];
-    }
+function readJsonStorage(key, fallback) {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(key) || "null");
+    return parsed === null ? fallback : parsed;
+  } catch (_) {
+    return fallback;
   }
-  if (typeof payload.lastModifiedAt === "string") return payload.lastModifiedAt;
-  if (typeof payload.exportedAt === "string") return payload.exportedAt;
-  return "";
 }
 
+function writeJsonStorage(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
 
-function roleBackupConfirmationText(type, itemCount, payload) {
+function setOrRemoveStorage(key, value) {
+  if (value === null || value === undefined || value === "") localStorage.removeItem(key);
+  else localStorage.setItem(key, String(value));
+}
+
+function personRoleForVariant(def, person) {
+  return person === "male" ? def.maleRole : def.femaleRole;
+}
+
+function personNoteField(person) {
+  return person === "male" ? "noteMale" : "noteFemale";
+}
+
+function roleFields(role) {
+  return role === "sub"
+    ? { want:"wantSub", prior:"priorSub", after:"afterSub" }
+    : { want:"wantDom", prior:"priorDom", after:"afterDom" };
+}
+
+function compactStoredItem(raw) {
+  if (!raw || raw.id == null) return null;
+  const out = { id:Number(raw.id) };
+  for (const key of ["wantSub","wantDom","afterSub","afterDom"]) {
+    if (Number.isInteger(raw[key])) out[key] = raw[key];
+  }
+  if (raw.priorSub === true) out.priorSub = true;
+  if (raw.priorDom === true) out.priorDom = true;
+  if (raw.doneTogether === true) out.doneTogether = true;
+  if (typeof raw.noteMale === "string" && raw.noteMale) out.noteMale = raw.noteMale;
+  if (typeof raw.noteFemale === "string" && raw.noteFemale) out.noteFemale = raw.noteFemale;
+  return Object.keys(out).length > 1 ? out : null;
+}
+
+function sanitizeStoredItems(rawItems) {
+  return (Array.isArray(rawItems) ? rawItems : []).map(compactStoredItem).filter(Boolean);
+}
+
+function readVariantFullSnapshot(def) {
+  const keys = storageKeysForVariant(def);
+  return {
+    items: sanitizeStoredItems(readJsonStorage(keys.items, [])),
+    safety: readJsonStorage(keys.safety, {}),
+    sessionOrder: readJsonStorage(keys.session, []),
+    columnPreferences: readJsonStorage(keys.columns, null),
+    experienceMode: localStorage.getItem(keys.experienceMode) || null,
+    collapsedCategories: readJsonStorage(keys.collapsedCategories, []),
+    randomPreferences: readJsonStorage(keys.randomPrefs, null),
+    randomDrawHistory: readJsonStorage(keys.randomHistory, []),
+    modifiedAtByScope: readJsonStorage(keys.modifiedScopes, {}),
+    lastModifiedAt: localStorage.getItem(keys.lastModified) || "",
+    activeRole: localStorage.getItem(keys.role) || null,
+    showOtherRoleColumns: localStorage.getItem(keys.otherRoleColumns),
+    readOnly: localStorage.getItem(keys.readOnly)
+  };
+}
+
+function projectPersonItems(rawItems, role, person) {
+  const fields = roleFields(role);
+  const noteField = personNoteField(person);
+  const projected = [];
+  for (const raw of Array.isArray(rawItems) ? rawItems : []) {
+    if (!raw || raw.id == null) continue;
+    const out = { id:Number(raw.id) };
+    if (Number.isInteger(raw[fields.want])) out[fields.want] = raw[fields.want];
+    if (raw[fields.prior] === true) out[fields.prior] = true;
+    if (Number.isInteger(raw[fields.after])) out[fields.after] = raw[fields.after];
+    if (raw.doneTogether === true) out.doneTogether = true;
+    if (typeof raw[noteField] === "string" && raw[noteField]) out[noteField] = raw[noteField];
+    if (Object.keys(out).length > 1) projected.push(out);
+  }
+  return projected;
+}
+
+function readVariantPersonSnapshot(def, person) {
+  const keys = storageKeysForVariant(def);
+  const role = personRoleForVariant(def, person);
+  const rawItems = readJsonStorage(keys.items, []);
+  const scopes = readJsonStorage(keys.modifiedScopes, {});
+  return {
+    role,
+    items: projectPersonItems(rawItems, role, person),
+    safety: readJsonStorage(keys.safety, {}),
+    scopeModifiedAt: typeof scopes?.[role] === "string" && scopes[role]
+      ? scopes[role]
+      : (localStorage.getItem(keys.lastModified) || "")
+  };
+}
+
+function latestLocalPersonModifiedAt(person) {
+  let latest = 0;
+  for (const def of Object.values(SITE_VARIANTS)) {
+    const keys = storageKeysForVariant(def);
+    const role = personRoleForVariant(def, person);
+    const scopes = readJsonStorage(keys.modifiedScopes, {});
+    const iso = typeof scopes?.[role] === "string" && scopes[role]
+      ? scopes[role]
+      : (localStorage.getItem(keys.lastModified) || "");
+    const time = new Date(iso).getTime();
+    if (Number.isFinite(time)) latest = Math.max(latest, time);
+  }
+  return latest ? new Date(latest).toISOString() : "";
+}
+
+function previewGlobalSafetyConflicts(payload, type) {
+  if (type === "full" || !payload?.variants) return [];
+  const conflicts = [];
+  for (const [variantId, incoming] of Object.entries(payload.variants)) {
+    const def = SITE_VARIANTS[variantId];
+    if (!def || !incoming?.safety || typeof incoming.safety !== "object") continue;
+    const localSafety = readJsonStorage(storageKeysForVariant(def).safety, {});
+    const result = mergeSafetyPrudent(localSafety, incoming.safety);
+    for (const key of result.conflicts) conflicts.push(`${variantId}:${key}`);
+  }
+  return conflicts;
+}
+
+function globalBackupConfirmationText(type, payload) {
   const label = backupTypeLabel(type);
-  const when = incomingRelevantModifiedAt(payload, type);
-  const local = relevantLocalModifiedAt(type);
-  const incomingTime = when ? new Date(when).getTime() : NaN;
-  const localTime = local ? new Date(local).getTime() : NaN;
-  const older = Number.isFinite(incomingTime) && Number.isFinite(localTime) && incomingTime < localTime;
-  const count = practiceCountText(itemCount);
-  const safetyPreview = type === "full" ? {conflicts:[]} : previewSafetyMerge(payload);
-  const subName = roleLabel("sub");
-  const domName = roleLabel("dom");
-  const roleName = type === "sub" ? subName : domName;
-  const otherName = type === "sub" ? domName : subName;
-  const favoriteIcon = type === "sub" ? "⭐" : "👑";
+  const incoming = typeof payload.exportedAt === "string" ? payload.exportedAt : "";
+  const local = type === "full" ? "" : latestLocalPersonModifiedAt(type);
+  const incomingTime = new Date(incoming).getTime();
+  const localTime = new Date(local).getTime();
+  const older = type !== "full" && Number.isFinite(incomingTime) && Number.isFinite(localTime) && incomingTime < localTime;
+  const conflicts = previewGlobalSafetyConflicts(payload, type);
 
-  let message = "";
+  let message;
   if (currentLang === "fr") {
     if (type === "full") {
-      message = `Sauvegarde COMPLÈTE — ${count}.\n\nElle remplacera toutes les réponses, les notes communes, la sécurité, la séance, les préférences d'affichage et l'état du tirage aléatoire.`;
+      message = "Sauvegarde COMPLÈTE.\n\nElle remplacera entièrement les données des DEUX checklists : réponses Homme et Femme, Fait ensemble, notes F:/H:, sécurité, séances, affichage et tirage aléatoire.";
+    } else if (type === "male") {
+      message = "Sauvegarde HOMME.\n\nElle remplacera uniquement les réponses de l’homme dans les DEUX dynamiques : Soumis dans Maîtresse & Soumis + Maître dans Maître & Soumise.\n\nSa ligne H: des notes communes sera remplacée par celle du fichier. La ligne F: restera intacte. « Fait ensemble » est additif : un Oui importé ne peut pas être effacé par un Non. La sécurité est fusionnée prudemment. Les réponses Femme, séances et réglages d’affichage ne seront pas modifiés.";
     } else {
-      message =
-        `Sauvegarde ${roleName.toLocaleUpperCase("fr-FR")} — ${count}.\n\n` +
-        `Elle fusionnera : Préférence ${roleName} (dont ${favoriteIcon} Favori), Déjà fait avant — ${roleName}, Après expérience ${roleName}, Fait ensemble et les réglages de sécurité.\n\n` +
-        `Les réponses ${otherName}, les notes communes et la séance ne seront pas modifiées.\n` +
-        `« Fait ensemble » est additif : un Oui importé est conservé, un Non ne peut pas effacer un Oui local.\n` +
-        `Sécurité : les valeurs vides n'effacent rien, les protections les plus strictes sont conservées et les hard limits/aftercare des deux appareils sont réunis.`;
+      message = "Sauvegarde FEMME.\n\nElle remplacera uniquement les réponses de la femme dans les DEUX dynamiques : Maîtresse dans Maîtresse & Soumis + Soumise dans Maître & Soumise.\n\nSa ligne F: des notes communes sera remplacée par celle du fichier. La ligne H: restera intacte. « Fait ensemble » est additif : un Oui importé ne peut pas être effacé par un Non. La sécurité est fusionnée prudemment. Les réponses Homme, séances et réglages d’affichage ne seront pas modifiés.";
     }
-    if (safetyPreview.conflicts.length) {
-      message += `\n\n⚠️ Conflit de sécurité : ${safetyPreview.conflicts.map(safetyConflictLabel).join(", ")}. La valeur locale sera conservée.`;
-    }
-    if (older) {
-      message += `\n\n⚠️ Ce fichier semble plus ancien pour ${label} :\nfichier ${formatDateTime(when)} · appareil ${formatDateTime(local)}.`;
-    }
+    if (conflicts.length) message += `\n\n⚠️ ${conflicts.length} conflit(s) de safeword/signal : la valeur locale sera conservée.`;
+    if (older) message += `\n\n⚠️ Ce fichier ${label} semble plus ancien que les données locales correspondantes.`;
     return message + "\n\nContinuer ?";
   }
 
   if (type === "full") {
-    message = `FULL BACKUP — ${count}.\n\nIt will replace all answers, shared notes, safety settings, session, display preferences and random-draw state.`;
+    message = "FULL BACKUP.\n\nIt will completely replace data from BOTH checklists: Male and Female answers, Done together, F:/M: shared-note lines, safety, sessions, display settings and random-draw state.";
+  } else if (type === "male") {
+    message = "MALE BACKUP.\n\nIt will replace only the man’s answers in BOTH dynamics: Submissive in Domme & Submissive + Master in Master & Submissive.\n\nHis M: shared-note line will be replaced by the file. The F: line stays untouched. Done together is additive: an imported No cannot erase a local Yes. Safety is merged conservatively. Female answers, sessions and display settings are unchanged.";
   } else {
-    message =
-      `${roleName.toLocaleUpperCase("en-GB")} BACKUP — ${count}.\n\n` +
-      `It will merge: ${roleName} preference (including ${favoriteIcon} Favorite), Done before — ${roleName}, ${roleName} After experience, Done together and safety settings.\n\n` +
-      `${otherName} answers, shared notes and the session will not be changed.\n` +
-      `“Done together” is additive: an imported Yes is kept, while an imported No cannot erase a local Yes.\n` +
-      `Safety: empty values erase nothing, the most protective settings are kept, and hard limits/aftercare from both devices are preserved.`;
+    message = "FEMALE BACKUP.\n\nIt will replace only the woman’s answers in BOTH dynamics: Domme in Domme & Submissive + Submissive in Master & Submissive.\n\nHer F: shared-note line will be replaced by the file. The M: line stays untouched. Done together is additive: an imported No cannot erase a local Yes. Safety is merged conservatively. Male answers, sessions and display settings are unchanged.";
   }
-  if (safetyPreview.conflicts.length) {
-    message += `\n\n⚠️ Safety conflict: ${safetyPreview.conflicts.map(safetyConflictLabel).join(", ")}. The local value will be kept.`;
-  }
-  if (older) {
-    message += `\n\n⚠️ This file appears older for ${label}:\nfile ${formatDateTime(when)} · device ${formatDateTime(local)}.`;
-  }
+  if (conflicts.length) message += `\n\n⚠️ ${conflicts.length} safeword/signal conflict(s): the local value will be kept.`;
+  if (older) message += `\n\n⚠️ This ${label} file appears older than the corresponding local data.`;
   return message + "\n\nContinue?";
 }
 
@@ -890,18 +987,11 @@ function renderExchangeInfo() {
     return;
   }
   const action = lastExchange.type === "import" ? "Import" : "Export";
-  const backupLabel = backupTypeLabel(lastExchange.backupType || (lastExchange.role || "full"));
+  const backupLabel = backupTypeLabel(lastExchange.backupType || "full");
   const version = lastExchange.appVersion || t("versionUnknown");
   const modified = formatDateTime(lastExchange.lastModifiedAt || lastExchange.exportedAt);
   exchangeInfo.textContent = `${action} · ${backupLabel} · ${t("modified")} ${modified} · ${version}`;
 }
-
-function setLastExchange(info) {
-  lastExchange = info;
-  localStorage.setItem(LAST_EXCHANGE_KEY, JSON.stringify(info));
-  renderExchangeInfo();
-}
-
 
 function roleLabel(role) {
   return role === "dom" ? t("roleDom") : t("roleSub");
@@ -921,6 +1011,32 @@ function canEditRole(owner) {
 
 function canEditShared() {
   return !readOnly;
+}
+
+function currentPerson() {
+  return currentRole === MALE_ROLE ? "male" : "female";
+}
+
+function noteFieldForPerson(person) {
+  return person === "male" ? "noteMale" : "noteFemale";
+}
+
+function personShortLabel(person) {
+  if (currentLang === "fr") return person === "male" ? "H" : "F";
+  return person === "male" ? "M" : "F";
+}
+
+function sharedNoteEditorHtml(item, sessionModeEditor = false) {
+  const activePerson = currentPerson();
+  const baseClass = sessionModeEditor ? "session-person-note" : "person-note-input";
+  const idAttr = sessionModeEditor ? "data-session-person-note" : "data-person-note";
+  return `<div class="shared-note-editor${sessionModeEditor ? " session-shared-note-editor" : ""}">
+    ${["female","male"].map(person => {
+      const field = noteFieldForPerson(person);
+      const editable = !readOnly && activePerson === person;
+      return `<label class="shared-note-row person-${person}"><span class="shared-note-person">${personShortLabel(person)}:</span><textarea class="${baseClass}" ${idAttr}="${item.id}" data-note-person="${person}" ${editable ? "" : "readonly"} placeholder="${esc(t("commonNotePlaceholder"))}">${esc(item[field] || "")}</textarea></label>`;
+    }).join("")}
+  </div>`;
 }
 
 function otherRole() {
@@ -1245,9 +1361,7 @@ function renderSessionMode() {
       ${fantasy ? `<div class="session-mode-fantasy-banner">${esc(t("sessionFantasyBanner"))}</div>` : ""}
       <div class="session-mode-expl">${esc(localizedExplanation(item))}</div>
       <div class="session-mode-fields">
-        <label class="session-mode-note-label">${esc(t("sessionNotesLabel"))}
-          <textarea class="session-mode-note" data-session-mode-notes="${item.id}" ${readOnly ? "disabled" : ""} placeholder="${esc(t("commonNotePlaceholder"))}">${esc(item.notes || "")}</textarea>
-        </label>
+        <div class="session-mode-note-label"><span>${esc(t("sessionNotesLabel"))}</span>${sharedNoteEditorHtml(item, true)}</div>
         <label class="session-mode-together" ${fantasy ? `title="${esc(t("fantasyTogetherDisabled"))}"` : ""}>
           <input type="checkbox" data-session-mode-together="${item.id}" ${item.doneTogether ? "checked" : ""} ${readOnly || fantasy ? "disabled" : ""}>
           <span>${esc(t("sessionDoneTogetherLabel"))}</span>
@@ -1583,7 +1697,7 @@ function renderRightCell(item, key) {
     return `<div class="cell after ${ready?'':'disabled'}${roleCellClass("dom")}" data-col="afterDom" style="${style}"><div class="score-wrap">${scoreButtons(item,"afterDom",ready,"dom")}</div></div>`;
   }
   if (key === "notes") {
-    return `<div class="cell notes-cell" data-col="notes"><textarea class="note-input" data-action="notes" data-id="${item.id}" placeholder="${t("commonNotePlaceholder")}" ${readOnly?'readonly':''}>${esc(item.notes)}</textarea></div>`;
+    return `<div class="cell notes-cell" data-col="notes">${sharedNoteEditorHtml(item, false)}</div>`;
   }
   return "";
 }
@@ -1594,7 +1708,7 @@ function matches(item, q = "") {
 
   if (q) {
     const staticText = searchBaseById.get(Number(item.id)) || "";
-    const notesText = typeof item.notes === "string" ? item.notes.toLowerCase() : "";
+    const notesText = `${item.noteFemale || ""} ${item.noteMale || ""}`.toLowerCase();
     if (!staticText.includes(q) && !notesText.includes(q)) return false;
   }
 
@@ -2612,30 +2726,6 @@ function mergeSafetyPrudent(localSafety, incomingSafety) {
   return { merged, conflicts, changed };
 }
 
-function safetyConflictLabel(key) {
-  const labelsFr = {
-    slowWord:"safeword ralentir",
-    safeWord:"safeword arrêt",
-    slowSignal:"signal ralentir",
-    stopSignal:"signal arrêt"
-  };
-  const labelsEn = {
-    slowWord:"slow-down safeword",
-    safeWord:"stop safeword",
-    slowSignal:"slow-down signal",
-    stopSignal:"stop signal"
-  };
-  return (currentLang === "fr" ? labelsFr : labelsEn)[key] || key;
-}
-
-function previewSafetyMerge(payload) {
-  if (!payload || Array.isArray(payload) || !payload.safety || typeof payload.safety !== "object") {
-    return { conflicts:[], changed:false };
-  }
-  return mergeSafetyPrudent(getSafety(), payload.safety);
-}
-
-
 leftTable.addEventListener("click", handleTableClick);
 rightTable.addEventListener("click", handleTableClick);
 
@@ -2747,12 +2837,14 @@ search.addEventListener("input", () => {
 
 rightTable.addEventListener("input", (e) => {
   if (readOnly) return;
-  const input = e.target.closest('textarea[data-action="notes"]');
+  const input = e.target.closest('textarea[data-person-note]');
   if (!input) return;
-  const item = itemsById.get(Number(input.dataset.id));
+  const person = input.dataset.notePerson;
+  if (person !== currentPerson()) return;
+  const item = itemsById.get(Number(input.dataset.personNote));
   if (!item) return;
-  item.notes = input.value;
-  scheduleSave("common");
+  item[noteFieldForPerson(person)] = input.value;
+  scheduleSave(["common", currentRole]);
 });
 
 quickFilters.addEventListener("click", (e) => {
@@ -2791,12 +2883,14 @@ document.addEventListener("keydown", (e) => {
 
 sessionModeList.addEventListener("input", (e) => {
   if (readOnly) return;
-  const note = e.target.closest("textarea[data-session-mode-notes]");
+  const note = e.target.closest("textarea[data-session-person-note]");
   if (!note) return;
-  const item = itemsById.get(Number(note.dataset.sessionModeNotes));
+  const person = note.dataset.notePerson;
+  if (person !== currentPerson()) return;
+  const item = itemsById.get(Number(note.dataset.sessionPersonNote));
   if (!item) return;
-  item.notes = note.value;
-  scheduleSave("common");
+  item[noteFieldForPerson(person)] = note.value;
+  scheduleSave(["common", currentRole]);
 });
 
 sessionModeList.addEventListener("change", (e) => {
@@ -3189,159 +3283,134 @@ function renderCategoryControls() {
   }
 }
 
-function importChecklistJson(raw) {
-  if (readOnly) throw new Error(t("readOnlyActive"));
-  const payload = typeof raw === "string" ? JSON.parse(raw) : raw;
+function validateGlobalBackup(payload) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new Error(t("invalidBackup"));
-  if (payload.version !== 1 || payload.variantId !== BACKUP_VARIANT_ID) {
+  if (payload.version !== BACKUP_FORMAT_VERSION || payload.siteBackupId !== SITE_BACKUP_ID) {
     throw new Error(currentLang === "fr"
-      ? "Cette sauvegarde n’est pas compatible avec cette checklist."
-      : "This backup is not compatible with this checklist.");
+      ? "Sauvegarde incompatible : seul le format global v132 ou supérieur est accepté."
+      : "Incompatible backup: only the global v132-or-later format is accepted.");
+  }
+  const type = normalizeBackupType(payload);
+  if (!type || !payload.variants || typeof payload.variants !== "object") throw new Error(t("invalidBackup"));
+  for (const variantId of Object.keys(SITE_VARIANTS)) {
+    const block = payload.variants[variantId];
+    if (!block || typeof block !== "object" || !Array.isArray(block.items)) throw new Error(t("invalidBackup"));
+    if (type !== "full") {
+      const expectedRole = personRoleForVariant(SITE_VARIANTS[variantId], type);
+      if (block.role !== expectedRole) throw new Error(t("invalidBackup"));
+    }
+  }
+  return type;
+}
+
+function applyFullVariantSnapshot(def, snapshot) {
+  const keys = storageKeysForVariant(def);
+  writeJsonStorage(keys.items, sanitizeStoredItems(snapshot.items));
+  writeJsonStorage(keys.safety, snapshot.safety && typeof snapshot.safety === "object" ? snapshot.safety : {});
+  writeJsonStorage(keys.session, Array.isArray(snapshot.sessionOrder) ? snapshot.sessionOrder : []);
+
+  if (snapshot.columnPreferences && typeof snapshot.columnPreferences === "object") writeJsonStorage(keys.columns, snapshot.columnPreferences);
+  else localStorage.removeItem(keys.columns);
+
+  setOrRemoveStorage(keys.experienceMode, ["beginner","confirmed","advanced"].includes(snapshot.experienceMode) ? snapshot.experienceMode : null);
+  writeJsonStorage(keys.collapsedCategories, Array.isArray(snapshot.collapsedCategories) ? snapshot.collapsedCategories : []);
+
+  if (snapshot.randomPreferences && typeof snapshot.randomPreferences === "object") writeJsonStorage(keys.randomPrefs, snapshot.randomPreferences);
+  else localStorage.removeItem(keys.randomPrefs);
+  writeJsonStorage(keys.randomHistory, Array.isArray(snapshot.randomDrawHistory) ? snapshot.randomDrawHistory : []);
+
+  const modified = snapshot.modifiedAtByScope && typeof snapshot.modifiedAtByScope === "object"
+    ? snapshot.modifiedAtByScope
+    : {sub:snapshot.lastModifiedAt || "", dom:snapshot.lastModifiedAt || "", common:snapshot.lastModifiedAt || ""};
+  writeJsonStorage(keys.modifiedScopes, modified);
+  setOrRemoveStorage(keys.lastModified, snapshot.lastModifiedAt || "");
+  setOrRemoveStorage(keys.role, snapshot.activeRole === "dom" ? "dom" : snapshot.activeRole === "sub" ? "sub" : null);
+  setOrRemoveStorage(keys.otherRoleColumns, snapshot.showOtherRoleColumns);
+  setOrRemoveStorage(keys.readOnly, snapshot.readOnly);
+}
+
+function mergePersonIntoVariant(def, incoming, person) {
+  const keys = storageKeysForVariant(def);
+  const role = personRoleForVariant(def, person);
+  const fields = roleFields(role);
+  const noteField = personNoteField(person);
+  const localItems = sanitizeStoredItems(readJsonStorage(keys.items, []));
+  const byId = new Map(localItems.map(item => [Number(item.id), {...item}]));
+
+  // La sauvegarde personnelle remplace uniquement les champs de cette personne.
+  // Les champs de l'autre personne et les données communes restent présents.
+  for (const state of byId.values()) {
+    delete state[fields.want];
+    delete state[fields.prior];
+    delete state[fields.after];
+    delete state[noteField];
   }
 
-  const backupType = normalizeBackupType(payload);
-  if (!backupType || !Array.isArray(payload.items)) throw new Error(t("invalidBackup"));
-  const byId = new Map(payload.items.filter(x => x && x.id != null).map(x => [Number(x.id), x]));
-  let updated = 0;
-  let safetyMergeResult = { merged:getSafety(), conflicts:[], changed:false, present:false };
+  for (const raw of incoming.items) {
+    if (!raw || raw.id == null) continue;
+    const id = Number(raw.id);
+    const state = byId.get(id) || {id};
+    if (Number.isInteger(raw[fields.want])) state[fields.want] = raw[fields.want];
+    if (raw[fields.prior] === true) state[fields.prior] = true;
+    if (Number.isInteger(raw[fields.after])) state[fields.after] = raw[fields.after];
+    if (raw.doneTogether === true) state.doneTogether = true;
+    if (typeof raw[noteField] === "string" && raw[noteField]) state[noteField] = raw[noteField];
+    byId.set(id, state);
+  }
 
-  if (backupType === "full") {
-    items = initialItems.map(base => {
-      const current = itemsById.get(Number(base.id)) || normalizeItem(base);
-      const incoming = byId.get(Number(base.id));
-      if (!incoming) return normalizeItem(base, current);
-      updated++;
-      return normalizeItem(base, incoming);
-    });
+  const mergedItems = [...byId.values()].map(compactStoredItem).filter(Boolean);
+  writeJsonStorage(keys.items, mergedItems);
 
-    if (payload.safety && typeof payload.safety === "object") {
-      localStorage.setItem(SAFETY_KEY, JSON.stringify(payload.safety));
-      applySafety(payload.safety);
+  const localSafety = readJsonStorage(keys.safety, {});
+  const safetyResult = mergeSafetyPrudent(localSafety, incoming.safety && typeof incoming.safety === "object" ? incoming.safety : {});
+  if (safetyResult.changed) writeJsonStorage(keys.safety, safetyResult.merged);
+
+  const now = new Date().toISOString();
+  const scopes = readJsonStorage(keys.modifiedScopes, {});
+  scopes[role] = incoming.scopeModifiedAt || now;
+  // Fait ensemble, la ligne personnelle des notes et la sécurité touchent aussi la zone commune.
+  scopes.common = now;
+  writeJsonStorage(keys.modifiedScopes, scopes);
+  localStorage.setItem(keys.lastModified, now);
+
+  return { count: incoming.items.length, conflicts:safetyResult.conflicts };
+}
+
+function setGlobalLastExchange(info) {
+  for (const def of Object.values(SITE_VARIANTS)) {
+    localStorage.setItem(storageKeysForVariant(def).lastExchange, JSON.stringify(info));
+  }
+  lastExchange = info;
+  renderExchangeInfo();
+}
+
+function importGlobalBackup(payload) {
+  const type = validateGlobalBackup(payload);
+  const conflicts = [];
+  let count = 0;
+
+  if (type === "full") {
+    for (const [variantId, def] of Object.entries(SITE_VARIANTS)) {
+      applyFullVariantSnapshot(def, payload.variants[variantId]);
+      count += payload.variants[variantId].items.length;
     }
-
-    if (Array.isArray(payload.sessionOrder)) {
-      const validIds = new Set(initialItems.map(x => Number(x.id)));
-      sessionOrder = [...new Set(payload.sessionOrder.map(Number).filter(id => validIds.has(id)))];
-      saveSessionOrder(false);
-      renderSessionPanel();
-    }
-
-    if (payload.columnPreferences && typeof payload.columnPreferences === "object") {
-      for (const col of [...fixedColumns, ...scrollColumns]) {
-        if (Object.prototype.hasOwnProperty.call(payload.columnPreferences, col.key)) {
-          visibleColumns[col.key] = payload.columnPreferences[col.key] !== false;
-        }
-      }
-      saveVisibleColumns();
-      renderColumnControls();
-    }
-
-    if (["beginner","confirmed","advanced"].includes(payload.experienceMode)) {
-      experienceMode = payload.experienceMode;
-      localStorage.setItem(EXPERIENCE_MODE_KEY, experienceMode);
-      renderExperienceModeUI();
-    }
-
-    if (Array.isArray(payload.collapsedCategories)) {
-      collapsedCategories = new Set(payload.collapsedCategories.filter(name => allCatalogCategories.includes(name)));
-      saveCollapsedCategories();
-    }
-
-    if (payload.randomPreferences && typeof payload.randomPreferences === "object") {
-      applyRandomPreferences(payload.randomPreferences, true);
-    }
-
-    if (Array.isArray(payload.randomDrawHistory)) {
-      const validIds = new Set(initialItems.map(x => Number(x.id)));
-      randomDrawHistory = new Set(payload.randomDrawHistory.map(Number).filter(id => validIds.has(id)));
-      saveRandomHistory();
-    }
-
-    const sourceModifiedAt = incomingRelevantModifiedAt(payload, "full") || new Date().toISOString();
-    lastModifiedAt = sourceModifiedAt;
-    localStorage.setItem(LAST_MODIFIED_KEY, lastModifiedAt);
-    if (payload.modifiedAtByScope && typeof payload.modifiedAtByScope === "object") {
-      for (const scope of ["sub","dom","common"]) {
-        modifiedScopes[scope] = typeof payload.modifiedAtByScope[scope] === "string" ? payload.modifiedAtByScope[scope] : sourceModifiedAt;
-      }
-    } else {
-      modifiedScopes = { sub:sourceModifiedAt, dom:sourceModifiedAt, common:sourceModifiedAt };
-    }
-    saveModifiedScopes();
   } else {
-    let sharedPromoted = false;
-    items = initialItems.map(base => {
-      const current = itemsById.get(Number(base.id)) || normalizeItem(base);
-      const incoming = byId.get(Number(base.id));
-      if (!incoming) return normalizeItem(base, current);
-      updated++;
-      const mergedDoneTogether = !!current.doneTogether || incoming.doneTogether === true;
-      if (!current.doneTogether && incoming.doneTogether === true) sharedPromoted = true;
-
-      if (backupType === "sub") {
-        return normalizeItem(base, {
-          ...current,
-          wantSub: validScore(incoming.wantSub),
-          priorSub: incoming.priorSub === true,
-          doneTogether: mergedDoneTogether,
-          afterSub: validScore(incoming.afterSub)
-        });
-      }
-      return normalizeItem(base, {
-        ...current,
-        wantDom: validScore(incoming.wantDom),
-        priorDom: incoming.priorDom === true,
-        doneTogether: mergedDoneTogether,
-        afterDom: validScore(incoming.afterDom)
-      });
-    });
-
-    if (payload.safety && typeof payload.safety === "object") {
-      safetyMergeResult = { ...mergeSafetyPrudent(getSafety(), payload.safety), present:true };
-      if (safetyMergeResult.changed) {
-        localStorage.setItem(SAFETY_KEY, JSON.stringify(safetyMergeResult.merged));
-        applySafety(safetyMergeResult.merged);
-      }
+    for (const [variantId, def] of Object.entries(SITE_VARIANTS)) {
+      const result = mergePersonIntoVariant(def, payload.variants[variantId], type);
+      count += result.count;
+      conflicts.push(...result.conflicts.map(key => `${variantId}:${key}`));
     }
-
-    const scopeModifiedAt = incomingRelevantModifiedAt(payload, backupType) || new Date().toISOString();
-    modifiedScopes[backupType] = scopeModifiedAt;
-    if (sharedPromoted) {
-      const commonTime = modifiedScopes.common ? new Date(modifiedScopes.common).getTime() : NaN;
-      const sourceTime = new Date(scopeModifiedAt).getTime();
-      if (!Number.isFinite(commonTime) || (Number.isFinite(sourceTime) && sourceTime > commonTime)) modifiedScopes.common = scopeModifiedAt;
-    }
-    saveModifiedScopes();
-
-    const localTime = lastModifiedAt ? new Date(lastModifiedAt).getTime() : NaN;
-    const incomingTime = new Date(scopeModifiedAt).getTime();
-    if (!Number.isFinite(localTime) || (Number.isFinite(incomingTime) && incomingTime > localTime)) {
-      lastModifiedAt = scopeModifiedAt;
-      localStorage.setItem(LAST_MODIFIED_KEY, lastModifiedAt);
-    }
-    if (safetyMergeResult.changed) markModified("common");
   }
 
-  rebuildItemIndexes();
-  const removedLimitedFromSession = sanitizeSessionForLimits(true, false);
-  if (removedLimitedFromSession) markModified("common");
-  save(false);
-  renderRoleUI();
-  renderSessionPanel();
-  render();
-  renderQuickFilters();
-  updateCompatibilityIndicator();
-  return {
-    updated,
-    backupType,
-    exportedByRole: ["sub","dom"].includes(payload.exportedByRole)
-      ? payload.exportedByRole
-      : (backupType === "sub" || backupType === "dom" ? backupType : null),
-    exportedAt: typeof payload.exportedAt === "string" ? payload.exportedAt : null,
-    lastModifiedAt: incomingRelevantModifiedAt(payload, backupType) || null,
-    appVersion: typeof payload.appVersion === "string" ? payload.appVersion : APP_VERSION,
-    safetyConflicts: backupType !== "full" ? [...(safetyMergeResult.conflicts || [])] : []
+  const info = {
+    type:"import",
+    backupType:type,
+    exportedAt:typeof payload.exportedAt === "string" ? payload.exportedAt : null,
+    lastModifiedAt:new Date().toISOString(),
+    appVersion:typeof payload.appVersion === "string" ? payload.appVersion : APP_VERSION
   };
+  setGlobalLastExchange(info);
+  return {type, count, conflicts, info};
 }
 
 importJsonBtn.addEventListener("click", () => {
@@ -3358,46 +3427,29 @@ importJsonFile.addEventListener("change", async () => {
   const file = importJsonFile.files && importJsonFile.files[0];
   if (!file) return;
   flushSafetySave();
+  flushScheduledSave();
+  save(false);
 
   try {
     const parsed = JSON.parse(await file.text());
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed) || parsed.version !== 1 || parsed.variantId !== BACKUP_VARIANT_ID) {
-      throw new Error(currentLang === "fr" ? "Sauvegarde incompatible avec cette checklist." : "Backup incompatible with this checklist.");
-    }
-    const backupType = normalizeBackupType(parsed);
-    if (!backupType || !Array.isArray(parsed.items)) throw new Error(t("invalidBackup"));
-
-    if (!window.confirm(roleBackupConfirmationText(backupType, parsed.items.length, parsed))) {
+    const backupType = validateGlobalBackup(parsed);
+    if (!window.confirm(globalBackupConfirmationText(backupType, parsed))) {
       randomResult.innerHTML = currentLang === "fr"
         ? "<strong>Restauration annulée.</strong> Aucune donnée n’a été modifiée."
         : "<strong>Restore cancelled.</strong> No data was changed.";
       return;
     }
 
-    const result = importChecklistJson(parsed);
-    const label = backupTypeLabel(result.backupType);
-    setLastExchange({
-      type:"import",
-      backupType:result.backupType,
-      role:result.exportedByRole,
-      exportedAt:result.exportedAt,
-      lastModifiedAt:result.lastModifiedAt,
-      appVersion:result.appVersion
-    });
-
-    const when = formatDateTime(result.lastModifiedAt || result.exportedAt);
-    const mergeText = currentLang === "fr"
-      ? (result.backupType === "full" ? "restauration complète" : "fusion ciblée + sécurité, sans modifier l’autre rôle")
-      : (result.backupType === "full" ? "full restore" : "targeted merge + safety, without changing the other role");
-    const conflictText = result.safetyConflicts.length
-      ? (currentLang === "fr"
-          ? ` · ⚠️ ${result.safetyConflicts.length} conflit(s) sécurité : valeur locale conservée`
-          : ` · ⚠️ ${result.safetyConflicts.length} safety conflict(s): local value kept`)
+    const result = importGlobalBackup(parsed);
+    const label = backupTypeLabel(result.type);
+    const conflictText = result.conflicts.length
+      ? (currentLang === "fr" ? ` · ⚠️ ${result.conflicts.length} conflit(s) sécurité, valeur locale conservée` : ` · ⚠️ ${result.conflicts.length} safety conflict(s), local value kept`)
       : "";
-
-    randomResult.innerHTML = currentLang === "fr"
-      ? `<strong>${label} restaurée :</strong> ${practiceCountText(result.updated)} · ${mergeText}${conflictText} · modifiée ${when} · ${esc(result.appVersion)}.`
-      : `<strong>${label} restored:</strong> ${practiceCountText(result.updated)} · ${mergeText}${conflictText} · modified ${when} · ${esc(result.appVersion)}.`;
+    const message = currentLang === "fr"
+      ? `Sauvegarde ${label} restaurée sur les deux checklists${conflictText}. La page va être actualisée.`
+      : `${label} backup restored across both checklists${conflictText}. The page will now refresh.`;
+    window.alert(message);
+    window.location.reload();
   } catch (err) {
     console.error(err);
     const prefix = currentLang === "fr" ? "Restauration impossible :" : "Restore failed:";
@@ -3480,69 +3532,30 @@ function download(filename, content, type) {
   setTimeout(()=>URL.revokeObjectURL(url), 1000);
 }
 
-function buildBackupPayload(type) {
+function buildGlobalBackupPayload(type) {
   const exportedAt = new Date().toISOString();
-  const scopeModifiedAt = (type === "sub" || type === "dom")
-    ? (modifiedScopes[type] || lastModifiedAt || exportedAt)
-    : (lastModifiedAt || exportedAt);
-
-  let backupItems;
-
-  if (type === "sub") {
-    backupItems = items.map(item => ({
-      id:item.id,
-      wantSub:Number.isInteger(item.wantSub) ? item.wantSub : null,
-      priorSub:!!item.priorSub,
-      doneTogether:!!item.doneTogether,
-      afterSub:Number.isInteger(item.afterSub) ? item.afterSub : null
-    }));
-  } else if (type === "dom") {
-    backupItems = items.map(item => ({
-      id:item.id,
-      wantDom:Number.isInteger(item.wantDom) ? item.wantDom : null,
-      priorDom:!!item.priorDom,
-      doneTogether:!!item.doneTogether,
-      afterDom:Number.isInteger(item.afterDom) ? item.afterDom : null
-    }));
-  } else {
-    backupItems = items.map(compactUserState);
+  const variants = {};
+  for (const [variantId, def] of Object.entries(SITE_VARIANTS)) {
+    variants[variantId] = type === "full"
+      ? readVariantFullSnapshot(def)
+      : readVariantPersonSnapshot(def, type);
   }
-
-  const payload = {
-    version:1,
+  return {
+    version:BACKUP_FORMAT_VERSION,
     appVersion:APP_VERSION,
-    variantId:BACKUP_VARIANT_ID,
+    siteBackupId:SITE_BACKUP_ID,
     backupType:type,
     exportedAt,
-    lastModifiedAt:scopeModifiedAt,
-    exportedByRole:type === "sub" || type === "dom" ? type : currentRole,
-    items:backupItems
+    variants
   };
-
-  if (type === "sub" || type === "dom") {
-    payload.scopeModifiedAt = scopeModifiedAt;
-    payload.safety = getSafety();
-  } else {
-    payload.modifiedAtByScope = {...modifiedScopes};
-    payload.sessionOrder = [...sessionOrder];
-    payload.safety = getSafety();
-    payload.columnPreferences = {...visibleColumns};
-    payload.experienceMode = experienceMode;
-    payload.collapsedCategories = [...collapsedCategories];
-    payload.randomPreferences = getRandomPreferences();
-    payload.randomDrawHistory = [...randomDrawHistory];
-  }
-
-  return payload;
 }
-
 
 function exportBackup(type) {
   flushSafetySave();
   flushScheduledSave();
   save(false);
 
-  const payload = buildBackupPayload(type);
+  const payload = buildGlobalBackupPayload(type);
   const d = new Date();
   const dateStamp = [
     d.getFullYear(),
@@ -3555,37 +3568,43 @@ function exportBackup(type) {
   ].join("-");
 
   const label = backupTypeLabel(type);
-  let fileLabel;
-  if (type === "full") fileLabel = currentLang === "fr" ? "COMPLETE" : "FULL";
-  else if (type === "sub") fileLabel = CHECKLIST_VARIANT.fileRoleLabels[currentLang].sub;
-  else fileLabel = CHECKLIST_VARIANT.fileRoleLabels[currentLang].dom;
+  const fileLabel = type === "full" ? (currentLang === "fr" ? "COMPLETE" : "FULL")
+    : type === "male" ? (currentLang === "fr" ? "HOMME" : "MALE")
+    : (currentLang === "fr" ? "FEMME" : "FEMALE");
+  const totalEntries = Object.values(payload.variants).reduce((sum, block) => sum + (Array.isArray(block.items) ? block.items.length : 0), 0);
 
-  download(`${CHECKLIST_VARIANT.backupFilenamePrefix}_${fileLabel}_${dateStamp}_${timeStamp}.json`,
+  download(`Checklist_DS_Couple_${fileLabel}_${dateStamp}_${timeStamp}.json`,
     JSON.stringify(payload,null,2), "application/json");
 
-  setLastExchange({
+  const info = {
     type:"export",
     backupType:type,
-    role:type === "sub" || type === "dom" ? type : currentRole,
     exportedAt:payload.exportedAt,
-    lastModifiedAt:payload.lastModifiedAt,
+    lastModifiedAt:payload.exportedAt,
     appVersion:APP_VERSION
-  });
+  };
+  setGlobalLastExchange(info);
 
   if (currentLang === "fr") {
-    const content = type === "full" ? "toutes les données" : `données ${label} + Fait ensemble + sécurité`;
-    randomResult.innerHTML =
-      `<strong>Sauvegarde ${label} créée :</strong> ${content} · dernière modification ${formatDateTime(payload.lastModifiedAt)} · ${APP_VERSION}.`;
+    const content = type === "full"
+      ? "les deux checklists complètes"
+      : type === "male"
+        ? "réponses Homme (Soumis + Maître), ligne H:, Fait ensemble et sécurité"
+        : "réponses Femme (Maîtresse + Soumise), ligne F:, Fait ensemble et sécurité";
+    randomResult.innerHTML = `<strong>Sauvegarde ${label} créée :</strong> ${content} · ${totalEntries} entrée(s) utiles · ${APP_VERSION}.`;
   } else {
-    const content = type === "full" ? "all data" : `${label} data + Done together + safety`;
-    randomResult.innerHTML =
-      `<strong>${label} backup created:</strong> ${content} · last modified ${formatDateTime(payload.lastModifiedAt)} · ${APP_VERSION}.`;
+    const content = type === "full"
+      ? "both complete checklists"
+      : type === "male"
+        ? "Male answers (Submissive + Master), M: line, Done together and safety"
+        : "Female answers (Domme + Submissive), F: line, Done together and safety";
+    randomResult.innerHTML = `<strong>${label} backup created:</strong> ${content} · ${totalEntries} useful entries · ${APP_VERSION}.`;
   }
 }
 
 exportFullBtn.addEventListener("click", () => exportBackup("full"));
-exportSubBtn.addEventListener("click", () => exportBackup("sub"));
-exportDomBtn.addEventListener("click", () => exportBackup("dom"));
+exportMaleBtn.addEventListener("click", () => exportBackup("male"));
+exportFemaleBtn.addEventListener("click", () => exportBackup("female"));
 
 loadSafety();
 applyStaticLanguage();

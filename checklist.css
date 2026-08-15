@@ -1,4 +1,6 @@
 :root {
+  --male-role-color:#2F6F8F; --male-role-dark:#1E536C; --male-role-soft:#E8F2F7;
+  --female-role-color:#8B3F6F; --female-role-dark:#67294D; --female-role-soft:#F7EAF2;
   --bg:#f5f6f7; --panel:#ffffff; --text:#202124; --muted:#687078;
   --border:#d8dde3; --head:#263238; --accent:#2b7a78;
   --sub-role-color:#2F6F8F; --sub-role-soft:#E8F2F7; --sub-role-dark:#1E536C; --sub-role-accent:#5AA0C2; --sub-role-head:#274F62;
@@ -255,13 +257,19 @@ main {
   background:#eceff1; cursor:pointer; font-size:26px; font-weight:800;
 }
 .done.checked { background:var(--s5); border-color:#5e8f4a; color:#274e13; }
-.notes-cell { padding:6px; }
-.note-input {
-  width:100%; height:48px; min-height:48px; max-height:48px; resize:none;
-  border:1px solid #cfd5da; border-radius:8px; padding:7px 8px;
-  font:inherit; font-size:12px; line-height:1.3; background:#fff;
+.notes-cell { padding:4px 6px; }
+.shared-note-editor { width:100%; display:grid; gap:2px; min-width:0; }
+.shared-note-row { display:grid; grid-template-columns:20px minmax(0,1fr); gap:3px; align-items:center; min-width:0; }
+.shared-note-person { font-size:10px; line-height:1; font-weight:950; text-align:center; color:#5c646b; }
+.person-female .shared-note-person { color:var(--female-role-dark); }
+.person-male .shared-note-person { color:var(--male-role-dark); }
+.person-note-input {
+  width:100%; height:21px; min-height:21px; max-height:21px; resize:none; overflow:auto;
+  border:1px solid #cfd5da; border-radius:5px; padding:2px 5px;
+  font:inherit; font-size:9px; line-height:1.25; background:#fff;
 }
-.note-input:focus { outline:2px solid #7c858c; outline-offset:1px; }
+.person-note-input:focus { outline:2px solid #7c858c; outline-offset:1px; }
+.person-note-input[readonly] { background:#f1f3f4; color:#687078; }
 
 .after.disabled { opacity:.55; filter:grayscale(1); pointer-events:none; }
 
@@ -471,12 +479,6 @@ main {
     font-size:20px;
   }
 
-  .note-input {
-    height:44px;
-    min-height:44px;
-    max-height:44px;
-    font-size:11px;
-  }
   .bottom-scroll-row {
     display:none !important;
   }
@@ -933,7 +935,8 @@ body[data-readonly="true"] .table-shell {
   outline-offset:-2px;
 }
 
-body[data-readonly="true"] .note-input {
+body[data-readonly="true"] .person-note-input,
+body[data-readonly="true"] .session-person-note {
   background:#f1f3f4;
   color:#687078;
 }
@@ -1313,16 +1316,16 @@ body[data-readonly="true"] .note-input {
   border-color:#34383c;
   font-weight:900;
 }
-.backup-actions .sub-backup {
-  border-color:var(--sub-role-color);
-  color:var(--sub-role-dark);
-  background:#F5FAFC;
+.backup-actions .male-backup {
+  border-color:var(--male-role-color);
+  color:var(--male-role-dark);
+  background:var(--male-role-soft);
   font-weight:900;
 }
-.backup-actions .dom-backup {
-  border-color:var(--dom-role-color);
-  color:var(--dom-role-dark);
-  background:#FCF6FA;
+.backup-actions .female-backup {
+  border-color:var(--female-role-color);
+  color:var(--female-role-dark);
+  background:var(--female-role-soft);
   font-weight:900;
 }
 .backup-hint {
@@ -2389,10 +2392,12 @@ body.session-mode-open { overflow:hidden !important; }
   border-top:1px solid #e5e8ea; background:#fafbfb;
 }
 .session-mode-note-label { display:flex; flex-direction:column; gap:4px; min-width:0; font-size:9px; font-weight:900; color:var(--muted); }
-.session-mode-note {
-  width:100%; min-height:48px; resize:vertical; border:1px solid #cfd5da; border-radius:8px; padding:7px 8px;
-  background:#fff; font:inherit; font-size:11px; line-height:1.3;
+.session-shared-note-editor { gap:4px; }
+.session-person-note {
+  width:100%; min-height:34px; resize:vertical; border:1px solid #cfd5da; border-radius:7px; padding:5px 7px;
+  background:#fff; font:inherit; font-size:10px; line-height:1.3;
 }
+.session-person-note[readonly] { background:#f1f3f4; color:#687078; }
 .session-mode-together {
   display:flex; align-items:center; gap:6px; white-space:nowrap; font-size:10px; font-weight:900; color:#3e464c;
 }
@@ -2498,7 +2503,7 @@ input[type="search"]:hover, select:hover { border-color:#b7c0c7; }
 }
 .session-mode-card { box-shadow:var(--shadow-soft); }
 .session-mode-card:hover { border-color:#c7cdd2; }
-.session-mode-note:focus { background:#fff; }
+.session-person-note:focus { background:#fff; outline:2px solid #7c858c; outline-offset:1px; }
 .session-mode-close:hover { background:#f1f3f4; }
 .session-mode-safety { box-shadow:var(--shadow-soft); }
 
@@ -4039,13 +4044,15 @@ body[data-checklist-id="maitre-soumise"] .table-shell {
     width:56px !important;
     min-width:56px !important;
   }
-  .note-input {
-    height:36px !important;
-    min-height:36px !important;
-    max-height:36px !important;
-    padding:3px 5px !important;
-    font-size:9px !important;
+  .person-note-input {
+    height:17px !important;
+    min-height:17px !important;
+    max-height:17px !important;
+    padding:1px 4px !important;
+    font-size:8px !important;
   }
+  .shared-note-row { grid-template-columns:16px minmax(0,1fr); gap:2px; }
+  .shared-note-person { font-size:8px; }
 
   .right-scroll {
     touch-action:pan-x pan-y !important;
