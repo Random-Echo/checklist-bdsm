@@ -1,0 +1,15 @@
+{
+  "name": "checklist-bdsm",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "version:bump": "node scripts/bump-version.mjs",
+    "catalog:audit": "node scripts/audit-catalog.mjs",
+    "catalog:audit:verbose": "node scripts/audit-catalog.mjs --verbose",
+    "privacy:audit": "node scripts/privacy-audit.mjs",
+    "smoke:reading": "node scripts/smoke-reading.mjs",
+    "validate": "node scripts/validate.mjs",
+    "serve": "node scripts/serve.mjs"
+  }
+}

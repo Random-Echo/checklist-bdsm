@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" name="viewport"/>
+<title>Checklist BDSM — Personnes A &amp; B</title>
+<link rel="canonical" href="https://random-echo.github.io/checklist-bdsm-test/checklist.html"/>
+<meta property="og:url" content="https://random-echo.github.io/checklist-bdsm-test/checklist.html"/>
+<link href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23070509'/%3E%3Cstop offset='1' stop-color='%23140a10'/%3E%3C/linearGradient%3E%3ClinearGradient id='cr' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23f03a67'/%3E%3Cstop offset='.55' stop-color='%23cf1748'/%3E%3Cstop offset='1' stop-color='%23990d35'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='2' y='2' width='60' height='60' rx='15' fill='url(%23bg)' stroke='%23301823' stroke-width='2'/%3E%3Cpath d='M13 24.5 22.2 31 32 14.5 41.8 31 51 24.5 46.2 44.5H17.8z' fill='url(%23cr)'/%3E%3Cpath d='M18.8 46.5h26.4v4.5H18.8z' rx='2' fill='%23b50f3d'/%3E%3Cpath d='M20 38.5h24' stroke='%23ff6d8d' stroke-opacity='.55' stroke-width='2.2' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='31.8' r='2.4' fill='%23f2b75d'/%3E%3Ccircle cx='13' cy='23.5' r='3' fill='%23e52556'/%3E%3Ccircle cx='32' cy='13.5' r='3.2' fill='%23f03a67'/%3E%3Ccircle cx='51' cy='23.5' r='3' fill='%23e52556'/%3E%3C/svg%3E" rel="icon" type="image/svg+xml"/>
+<link href="app.css?v=V1.1" rel="stylesheet"/>
+<script src="bootstrap.js?v=V1.1"></script>
+<script defer src="profiles.js?v=V1.1"></script>
+<script defer src="interaction-model.js?v=V1.1"></script>
+<script defer src="practice-catalog.js?v=V1.1"></script>
+<script defer src="storage.js?v=V1.1"></script>
+<script defer src="catalog-runtime.js?v=V1.1"></script>
+<script defer src="text-ui.js?v=V1.1"></script>
+<script defer src="score-ui.js?v=V1.1"></script>
+<script defer src="app.js?v=V1.1"></script>
+</head>
+<!-- Checklist BDSM unifiée V1.1 -->
+<body data-view-mode="edit">
+<div aria-labelledby="adultGateTitleFr" aria-modal="true" class="adult-gate" id="adultGate" role="dialog">
+<div aria-hidden="true" class="adult-gate-backdrop"></div>
+<section class="adult-gate-dialog" tabindex="-1">
+<div aria-hidden="true" class="adult-gate-badge">18+</div>
+<div class="adult-lang-fr">
+<h2 id="adultGateTitleFr">Contenu réservé aux adultes</h2>
+<p>Cette application aborde explicitement la sexualité, le BDSM et des pratiques D/s. Elle est destinée à faciliter la discussion sur les <strong>préférences, fantasmes, expériences et limites entre adultes consentants</strong>.</p>
+<p>Certaines pratiques mentionnées peuvent présenter des <strong>risques importants</strong>. La checklist n’est ni un conseil médical, ni un guide de sécurité, ni une instruction permettant de réaliser les pratiques décrites.</p>
+<div class="adult-gate-notice"><strong>Important :</strong> confirmer « J’ai 18 ans ou plus » constitue une déclaration d’âge. Ce bouton n’est pas un dispositif technique de vérification d’âge.</div>
+<p class="adult-gate-privacy">Les réponses et notes de cette version sont enregistrées localement sur votre appareil par l’application.</p>
+<div class="adult-gate-actions">
+<button class="adult-accept" data-adult-accept="" type="button">J’ai 18 ans ou plus</button>
+<button class="adult-exit" data-adult-exit="" type="button">Quitter</button>
+</div>
+</div>
+<div class="adult-lang-en">
+<h2 id="adultGateTitleEn">Adults only</h2>
+<p>This application explicitly discusses sexuality, BDSM and D/s practices. It is intended to support discussion of <strong>preferences, fantasies, experiences and limits between consenting adults</strong>.</p>
+<p>Some practices mentioned may involve <strong>significant risks</strong>. This checklist is not medical advice, a safety guide, or instructions for performing the practices described.</p>
+<div class="adult-gate-notice"><strong>Important:</strong> confirming “I am 18 or older” is an age declaration. This button is not a technical age-verification system.</div>
+<p class="adult-gate-privacy">Answers and notes in this version are stored locally on your device by the application.</p>
+<div class="adult-gate-actions">
+<button class="adult-accept" data-adult-accept="" type="button">I am 18 or older</button>
+<button class="adult-exit" data-adult-exit="" type="button">Leave</button>
+</div>
+</div>
+</section>
+</div>
+<header>
+<div class="top">
+<div class="clean-header-row">
+<h1 class="clean-header-title"><span data-i18n="appTitle">Checklist BDSM — Personne A &amp; Personne B</span> <span class="version-badge">V1.1</span> <span class="title-extra" data-i18n="titleExtra"></span></h1>
+<div class="clean-header-controls">
+<div class="clean-header-role"><div aria-label="Personne qui répond" class="role-switch" role="group">
+<button aria-pressed="false" class="role-choice" data-person-choice="person-a" type="button">● Personne A</button>
+<button aria-pressed="true" class="role-choice" data-person-choice="person-b" type="button">● Personne B</button>
+</div><div aria-label="Choix de la personne dominante" class="reader-header-ds" hidden="" id="readerHeaderDs" role="group">
+<button aria-pressed="true" class="reader-header-ds-choice" data-reader-header-ds="a-dominant" type="button">A domine</button>
+<button aria-pressed="false" class="reader-header-ds-choice" data-reader-header-ds="b-dominant" type="button">B domine</button>
+</div></div>
+<div aria-label="Langue" class="language-switch" data-i18n-aria-label="languageAria" role="group">
+<button aria-pressed="false" class="language-choice" data-lang-choice="fr" type="button">
+<svg aria-hidden="true" class="flag-svg" focusable="false" viewbox="0 0 30 20">
+<rect fill="#0055A4" height="20" width="10" x="0" y="0"></rect>
+<rect fill="#FFFFFF" height="20" width="10" x="10" y="0"></rect>
+<rect fill="#EF4135" height="20" width="10" x="20" y="0"></rect>
+</svg>
+<span>FR</span>
+</button>
+<button aria-pressed="false" class="language-choice" data-lang-choice="en" type="button">
+<svg aria-hidden="true" class="flag-svg" focusable="false" viewbox="0 0 60 40">
+<rect fill="#012169" height="40" width="60"></rect>
+<path d="M0 0 L60 40 M60 0 L0 40" stroke="#FFFFFF" stroke-width="9"></path>
+<path d="M0 0 L60 40 M60 0 L0 40" stroke="#C8102E" stroke-width="5"></path>
+<path d="M30 0 V40 M0 20 H60" stroke="#FFFFFF" stroke-width="13"></path>
+<path d="M30 0 V40 M0 20 H60" stroke="#C8102E" stroke-width="7"></path>
+</svg>
+<span>EN</span>
+</button>
+</div>
+<button aria-controls="helpModal" aria-expanded="false" aria-haspopup="dialog" aria-label="Aide" class="help-button" id="openHelp" title="Aide" type="button">?</button>
+<div aria-label="Mode de la checklist" class="clean-mode-switch" role="group">
+<button aria-pressed="true" class="clean-mode-button active" data-view-choice="edit" id="modeEdit" type="button"><span aria-hidden="true" class="mode-icon"><svg focusable="false" viewbox="0 0 24 24"><path d="M4.5 19.5h4l10.8-10.8-4-4L4.5 15.5v4Z"></path><path d="m13.9 6.1 4 4"></path><path d="M4.5 19.5 8 16"></path></svg></span><span class="mode-label">Édition</span></button>
+<button aria-pressed="false" class="clean-mode-button" data-view-choice="read" id="modeRead" type="button"><span aria-hidden="true" class="mode-icon"><svg focusable="false" viewbox="0 0 24 24"><path d="M3.8 5.8c3.3-1 6.1-.3 8.2 1.2v11.7c-2.1-1.5-4.9-2.2-8.2-1.2V5.8Z"></path><path d="M20.2 5.8c-3.3-1-6.1-.3-8.2 1.2v11.7c2.1-1.5 4.9-2.2 8.2-1.2V5.8Z"></path></svg></span><span class="mode-label">Lecture</span></button>
+</div>
+</div>
+</div>
+<div class="header-utility-row">
+<details class="all-tools" id="allTools">
+<summary><span class="tools-label-full" data-i18n="toolsOptions">☰ Outils &amp; options</span><span class="tools-label-mobile"><span class="adult-lang-fr">☰ Outils</span><span class="adult-lang-en">☰ Tools</span></span></summary>
+<div class="all-tools-content">
+<section class="tool-section exploration-tool-section">
+<h2 data-i18n="explorationDisplay">🧭 Exploration &amp; affichage</h2>
+<div class="explore-strip">
+<div class="explore-copy" data-i18n="exploreHint">Débutant 100 · Confirmé 300 · Avancé : tout — progressez seulement quand vous en avez envie.</div>
+<div class="experience-controls">
+<span class="experience-label" data-i18n="experienceModeLabel">Niveau d’exploration :</span>
+<div aria-label="Niveau d’exploration" class="experience-switch" id="experienceSwitch" role="group">
+<button data-experience-mode="beginner" type="button"></button>
+<button data-experience-mode="confirmed" type="button"></button>
+<button data-experience-mode="advanced" type="button"></button>
+</div>
+<span class="experience-note" data-i18n="experienceProgressive">Chaque mode inclut les niveaux précédents.</span>
+</div>
+</div>
+<label class="tool-check incompatible-display-toggle"><input id="showIncompatiblePractices" type="checkbox"/><span><span class="adult-lang-fr">Afficher les pratiques incompatibles</span><span class="adult-lang-en">Show incompatible practices</span></span></label>
+<div class="custom-practice-tool"><button class="action custom-practice-add" id="addCustomPractice" type="button"><span class="adult-lang-fr">＋ Ajouter une pratique</span><span class="adult-lang-en">＋ Add custom practice</span></button><small><span class="adult-lang-fr">Nom, description, risque et anatomie personnalisables.</span><span class="adult-lang-en">Custom name, description, risk and anatomy.</span></small></div>
+</section>
+<section class="tool-section filters-backup-section">
+<h2 data-i18n="filtersBackup">🔎 Filtres &amp; sauvegardes</h2>
+<div class="toolbar">
+<input aria-label="Rechercher une pratique, une explication ou une note…" data-i18n-aria-label="searchPlaceholder" data-i18n-placeholder="searchPlaceholder" id="search" placeholder="Rechercher une pratique, une explication ou une note…" type="search"/>
+<select aria-label="Toutes les catégories" data-i18n-aria-label="allCategories" id="category"><option data-i18n="allCategories" value="">Toutes les catégories</option></select>
+<select aria-label="Tout afficher" data-i18n-aria-label="showAll" id="status">
+<option data-i18n="showAll" value="">Tout afficher</option>
+</select>
+<select aria-label="Filtrer par niveau effectif minimal" data-i18n-aria-label="minFilterAria" id="minFilterScore">
+<option data-i18n="minBothAll" value="">Niveau minimum : tous</option>
+<option data-i18n="minLater" value="1">Pas maintenant ou mieux</option>
+<option data-i18n="minNeutral" value="2">Neutre ou mieux</option>
+<option data-i18n="minWant" value="3">🔥 Envie ou favori</option>
+<option data-i18n="minFavorite" value="4">👑 Favori</option>
+</select>
+<select aria-label="Filtrer par niveau de risque" data-i18n-aria-label="riskFilterAria" id="riskFilter">
+<option data-i18n="riskAll" value="">Risque : tous</option>
+<option data-i18n="riskNormal" value="normal">Risque : courant</option>
+<option data-i18n="riskCaution" value="caution">Risque : vigilance</option>
+<option data-i18n="riskHigh" value="high">Risque : élevé</option>
+</select>
+<div class="backup-actions">
+<button class="action restore-backup" data-i18n="restore" id="importJson" type="button">📂 Restaurer</button>
+<input accept=".json,application/json,text/json" hidden="" id="importJsonFile" type="file"/>
+<button class="action full-backup" data-i18n="backupFull" id="exportFull" type="button">💾 Complète</button>
+<button class="action person-a-backup" data-i18n="backupPersonA" id="exportPersonA" type="button">🔵 Personne A</button>
+<button class="action person-b-backup" data-i18n="backupPersonB" id="exportPersonB" type="button">🟣 Personne B</button>
+</div>
+<button class="action config-share" data-i18n="shareCoupleConfig" id="shareCoupleConfig" type="button">🔗 Partager la configuration</button>
+<div class="backup-hint"><span class="adult-lang-fr">Deux appareils : partagez d’abord le lien de configuration · Une sauvegarde individuelle peut être importée dans A ou B et emporte les pratiques personnalisées utilisées par cette personne · Complète = tout le couple.</span><span class="adult-lang-en">Two devices: share the configuration link first · An individual backup can be imported into A or B and includes custom practices used by that person · Full = the whole couple.</span></div>
+<div class="backup-status-row">
+<div class="exchange-info" id="exchangeInfo">Dernier échange : aucun</div>
+</div>
+</div>
+</section>
+<section class="tool-section safety-tool-section">
+<h2 data-i18n="safetyTitle">🛡️ Sécurité, limites &amp; aftercare</h2>
+<div class="safety">
+<div class="safety-grid">
+<label class="safety-slow-word"><span data-i18n="slowWordLabel">Safeword — ralentir / ajuster</span>
+<input data-i18n-placeholder="slowWordPlaceholder" id="slowWord" placeholder="Ex. jaune" type="text"/>
+</label>
+<label class="safety-stop-word"><span data-i18n="safeWordLabel">Safeword — arrêt immédiat</span>
+<input data-i18n-placeholder="safeWordPlaceholder" id="safeWord" placeholder="Ex. rouge" type="text"/>
+</label>
+<label class="safety-marks"><span data-i18n="marksLabel">Marques visibles</span>
+<select id="marks">
+<option data-i18n="toDefine" value="">À définir</option><option data-i18n="no" value="Non">Non</option><option data-i18n="yesLight" value="Oui, légères">Oui, légères</option><option data-i18n="yes" value="Oui">Oui</option>
+</select>
+</label>
+<label class="safety-slow-signal"><span data-i18n="slowSignalLabel">Signal non verbal — ralentir / ajuster</span>
+<input data-i18n-placeholder="slowSignalPlaceholder" id="slowSignal" placeholder="Ex. 1 tape / main levée" type="text"/>
+</label>
+<label class="safety-stop-signal"><span data-i18n="stopSignalLabel">Signal non verbal — arrêt immédiat</span>
+<input data-i18n-placeholder="stopSignalPlaceholder" id="stopSignal" placeholder="Ex. 3 tapes / objet lâché" type="text"/>
+</label>
+<label class="safety-hard-limits"><span data-i18n="hardLimitsLabel">Limites absolues</span>
+<textarea data-i18n-placeholder="hardLimitsPlaceholder" id="hardLimits" placeholder="Pratiques absolument exclues…"></textarea>
+</label>
+<label class="safety-aftercare"><span data-i18n="aftercareLabel">Aftercare souhaité</span>
+<textarea data-i18n-placeholder="aftercarePlaceholder" id="aftercare" placeholder="Câlins, douche, eau, calme, débrief…"></textarea>
+</label>
+<label class="safety-media"><span data-i18n="mediaLabel">Photos / vidéos</span>
+<select id="media">
+<option data-i18n="toDefine" value="">À définir</option><option data-i18n="mediaNone" value="Aucune">Aucune</option><option data-i18n="mediaYes" value="Oui">Oui</option><option data-i18n="mediaPrivate" value="Privées uniquement">Privées uniquement</option><option data-i18n="mediaCaseByCase" value="Selon accord explicite au cas par cas">Selon accord explicite au cas par cas</option>
+</select>
+</label>
+<div class="safety-check-row">
+<label class="safety-check"><input id="nextDayDebrief" type="checkbox"/> <span data-i18n="nextDayDebrief">Débrief le lendemain</span></label>
+<label class="safety-check"><input id="stopImmediate" type="checkbox"/> <span data-i18n="stopImmediate">Arrêt immédiat au safeword d’arrêt ou au signal non verbal d’arrêt</span></label>
+<label class="safety-check"><input id="noIntoxication" type="checkbox"/> <span data-i18n="noIntoxication">Pas de pratique sous l’influence de l’alcool ou d’autres substances intoxicantes</span></label>
+</div>
+</div>
+</div>
+</section>
+<section class="tool-section display-filter-section">
+<h2 data-i18n="displayFilters">⚙️ Affichage &amp; filtres rapides</h2>
+<div class="legend semantic-legend">
+<strong data-i18n="colorLabel">Choix :</strong>
+<span class="semantic-legend-item semantic-legend-unknown"><b data-i18n="scoreUnknownLegend">? Non renseigné</b><small data-i18n="scoreUnknownLegendDesc">Aucun choix n’a encore été indiqué.</small></span>
+<span class="semantic-legend-item" style="background:var(--s0)"><b data-i18n="scoreLimit">🚫 Limite</b><small data-i18n="scoreLimitDesc">Je ne veux pas le faire.</small></span>
+<span class="semantic-legend-item" style="background:var(--s1)"><b data-i18n="scoreLater">⏳ Pas maintenant</b><small data-i18n="scoreLaterDesc">Peut-être un jour, mais pas aujourd’hui.</small></span>
+<span class="semantic-legend-item" style="background:var(--s2)"><b data-i18n="scoreFantasy">💭 Fantasme</b><small data-i18n="scoreFantasyDesc">L’idée m’excite, mais je ne veux pas la réaliser en vrai.</small></span>
+<span class="semantic-legend-item" style="background:var(--s3)"><b data-i18n="scoreNeutral">😐 Neutre</b><small data-i18n="scoreNeutralDesc">Je suis neutre : cela me va si l’autre en a envie.</small></span>
+<span class="semantic-legend-item" style="background:var(--s4)"><b data-i18n="scoreWant">🔥 Envie</b><small data-i18n="scoreWantDesc">Je veux réellement le faire.</small></span>
+<span class="semantic-legend-item" style="background:var(--s5)"><b data-i18n="scoreFavorite">👑 Favori</b><small data-i18n="scoreFavoriteDesc">Fait partie des pratiques qui m’attirent le plus ou, si je l’ai déjà vécue, de mes pratiques préférées.</small></span>
+<span class="legend-help" data-i18n="legendHelp">Le résultat utilise directement le choix actuel indiqué pour chaque rôle.</span>
+<div class="reading-legend-card">
+<strong data-i18n="readingLegendTitle">👁 Mode lecture</strong>
+<div class="reading-legend-results" aria-label="Résultats affichés en mode lecture">
+<span class="reading-legend-line" data-i18n="readingLegendResultPersonA">Personne A : résultat de gauche.</span>
+<span class="reading-legend-line" data-i18n="readingLegendResultPersonB">Personne B : résultat du milieu.</span>
+<span class="reading-legend-line" data-i18n="readingLegendResultCouple">🔗 Couple : résultat de droite.</span>
+</div>
+<span class="reading-legend-line reading-legend-subtitle" data-i18n="readingLegendChecksIntro">Indicateurs sous les résultats :</span>
+<span class="reading-legend-line" data-i18n="readingLegendCheckPersonA">✓ Personne A : fait avant.</span>
+<span class="reading-legend-line" data-i18n="readingLegendCheckPersonB">✓ Personne B : fait avant.</span>
+<span class="reading-legend-line" data-i18n="readingLegendCheckTogether">□ / ✓ Ens. : bouton « Fait ensemble », modifiable en Lecture.</span>
+<span class="reading-legend-line" data-i18n="readingLegendCheckNo">— = non.</span>
+<span class="reading-legend-line reading-legend-pin" data-i18n="readingLegendPin">📌 L’épingle reste utilisable en mode lecture pour ajouter ou retirer une pratique de la séance.</span>
+</div>
+</div>
+</section>
+<div class="reset-zone">
+<button class="reset-btn" data-i18n="resetChecklist" id="resetChecklist" type="button">↺ Réinitialiser la checklist</button>
+<span data-i18n="resetHint">Efface réponses, séance, historique de tirage et sécurité. Une confirmation sera demandée.</span>
+</div>
+</div>
+</details>
+<div class="editor-top-dock" id="editorTopDock">
+  <button aria-label="Tout replier / Collapse all" class="individual-editor-bulk-btn" id="individualEditorCollapseAll" title="Tout replier / Collapse all" type="button"><span class="adult-lang-fr">▸ Replier</span><span class="adult-lang-en">▸ Collapse</span></button>
+  <button aria-label="Tout déplier / Expand all" class="individual-editor-bulk-btn" id="individualEditorExpandAll" title="Tout déplier / Expand all" type="button"><span class="adult-lang-fr">▾ Déplier</span><span class="adult-lang-en">▾ Expand</span></button>
+  <button aria-label="Profils / Profiles" class="profile-edit-button" id="individualEditorProfile" title="Profils / Profiles" type="button"><span class="adult-lang-fr">⚙ Profils</span><span class="adult-lang-en">⚙ Profiles</span></button>
+</div>
+</div>
+<div class="reader-top-dock" id="readerTopDock">
+    <details class="reader-filter-dock" id="readerFilterDock">
+    <summary class="reader-filter-summary-row">
+      <span class="reader-filter-summary-title"><span aria-hidden="true">✦</span> <span class="adult-lang-fr">Exploration &amp; séance</span><span class="adult-lang-en">Explore &amp; session</span></span>
+      <span class="reader-filter-summary-value" id="readerFilterSummary">—</span>
+      <span class="reader-filter-chevron" aria-hidden="true">⌄</span>
+    </summary>
+    <div class="reader-filter-content">
+      <section class="reader-explore-section reader-filter-core">
+      <div class="reader-explore-section-head"><h2><span class="adult-lang-fr">🔎 Filtre de lecture</span><span class="adult-lang-en">🔎 Reading filter</span></h2><span class="reader-filter-compat-count" id="readerFilterCompatCount" hidden>—</span></div>
+      <div class="reader-filter-group reader-dual-minimum-group">
+        <span class="reader-filter-label"><span class="adult-lang-fr">Minima des deux</span><span class="adult-lang-en">Both minimums</span></span>
+        <span class="reader-filter-hint"><span class="adult-lang-fr">Ordre indifférent</span><span class="adult-lang-en">Order independent</span></span>
+        <div class="reader-minimum-row">
+          <span class="reader-minimum-row-label"><span class="adult-lang-fr">Minimum 1</span><span class="adult-lang-en">Minimum 1</span></span>
+          <div class="reader-filter-chips" id="readerMinimumOneChips" role="group" aria-label="Premier minimum de préférence"></div>
+        </div>
+        <div class="reader-minimum-row">
+          <span class="reader-minimum-row-label"><span class="adult-lang-fr">Minimum 2</span><span class="adult-lang-en">Minimum 2</span></span>
+          <div class="reader-filter-chips" id="readerMinimumTwoChips" role="group" aria-label="Second minimum de préférence"></div>
+        </div>
+      </div>
+      <div class="reader-filter-bottom">
+        <label class="reader-filter-fantasy"><input id="readerIncludeFantasy" type="checkbox"/> <span><span aria-hidden="true">💭</span> <span class="adult-lang-fr">Inclure les fantasmes</span><span class="adult-lang-en">Include fantasies</span></span></label>
+      </div>
+      </section>
+      <section class="tool-section random-tool-section reader-explore-section reader-random-section">
+<div class="reader-explore-section-head"><h2 data-i18n="randomTitle">🎲 Tirage aléatoire</h2><small><span class="adult-lang-fr">Utilise le filtre de lecture actif.</span><span class="adult-lang-en">Uses the active reading filter.</span></small></div>
+<div class="randomizer">
+<button class="random-btn" data-i18n="choosePractice" id="randomBtn" type="button">🎲 Choisir une pratique</button>
+<div class="random-options">
+<label><input id="randomOnlyNew" type="checkbox"/> <span data-i18n="onlyNeverTogether">Uniquement les pratiques jamais faites ensemble</span></label>
+<label><input id="randomIncludeNeutralNeutral" type="checkbox"/> <span data-i18n="includeNeutralNeutral">Inclure Neutre + Neutre</span></label>
+<label><input checked="" id="randomExcludeHighRisk" type="checkbox"/> <span data-i18n="excludeHighRisk">Exclure les pratiques à risque élevé sauf en fantasme</span></label>
+<label><input checked="" id="randomNoRepeat" type="checkbox"/> <span data-i18n="noRepeatDraw">Ne pas répéter dans le cycle</span></label>
+<button class="random-cycle-reset" data-i18n="resetRandomCycle" id="resetRandomCycle" type="button">↺ Nouveau cycle</button>
+</div>
+<div class="random-candidate-info" id="randomCandidateInfo"></div>
+<div aria-live="polite" class="random-result" id="randomResult"><span class="adult-lang-fr">Le tirage choisit parmi les pratiques correspondant au filtre de lecture actif.</span><span class="adult-lang-en">The draw picks from practices matching the active reading filter.</span></div>
+</div>
+</section>
+      <section class="tool-section session-section reader-explore-section reader-session-section">
+<div class="reader-explore-section-head"><h2><span class="adult-lang-fr">📌 Séance</span><span class="adult-lang-en">📌 Session</span></h2><small><span class="adult-lang-fr">Pratiques épinglées depuis la lecture.</span><span class="adult-lang-en">Practices pinned from Reading.</span></small></div>
+<div class="session-toolbar">
+<button class="action session-mode-btn" data-i18n="openSessionMode" id="openSessionMode" type="button">▶ Mode séance</button>
+<button class="action" data-i18n="showSession" id="showSession" type="button">📌 Afficher la séance</button>
+<button class="action reset-session-btn" data-i18n="resetSession" id="resetSession" type="button">↺ Réinitialiser la séance</button>
+</div>
+<div class="session-summary" id="sessionSummary">Aucune pratique sélectionnée.</div>
+<div class="session-list" id="sessionList"></div>
+</section>
+    </div>
+    </details>
+  </div>
+</div>
+</header>
+<div aria-hidden="true" class="help-modal" hidden="" id="helpModal">
+<div class="help-backdrop" data-help-close="true"></div>
+<section aria-labelledby="helpTitle" aria-modal="true" class="help-dialog" role="dialog">
+<div class="help-header">
+<div>
+<div class="help-kicker" id="helpKicker">Aide</div>
+<h2 id="helpTitle">Comprendre la checklist</h2>
+</div>
+<button aria-label="Fermer" class="help-close" id="closeHelp" title="Fermer" type="button">✕</button>
+</div>
+<div class="help-body" id="helpBody">
+<div class="help-lang" data-help-lang="fr">
+<p class="help-intro">Le catalogue contient <strong>685 pratiques réparties dans 30 catégories</strong>, plus vos pratiques personnalisées. L’application sert à préparer une comparaison de couple sans exposer les réponses trop tôt : on répond d’abord séparément en <strong>Édition</strong>, puis on croise les résultats en <strong>Lecture</strong>.</p>
+<section class="help-section"><h3>1. Édition : répondre séparément</h3><p>Choisissez la personne qui répond. La couleur de l’interface indique la personne active. Seules ses réponses, ses notes et ses états <strong>Avant</strong> sont affichés ; les choix de l’autre personne restent cachés.</p><p>Les pratiques générales utilisent <strong>INTÉRÊT</strong>. Les pratiques dirigées utilisent <strong>DOM</strong> et <strong>SUB</strong> pour garder un vocabulaire stable, même si la direction réelle de l’action varie selon la configuration.</p></section>
+<section class="help-section"><h3>2. Lecture : comparer le couple</h3><p>Le mode Lecture croise les réponses compatibles, affiche le résultat du couple et laisse les réponses personnelles verrouillées. La couleur indique le dominant actuellement sélectionné ; changer le dominant change la lecture des variantes concernées.</p><p>Les actions communes restent disponibles : <strong>Fait ensemble</strong>, épingles, filtres, tirage aléatoire et séance.</p></section>
+<section class="help-section"><h3>3. Préférences</h3><p><strong>?</strong> = non renseigné · 🚫 = limite · ⏳ = pas maintenant · 💭 = fantasme · 😐 = neutre · 🔥 = envie · 👑 = favori.</p><p><strong>Avant</strong> signifie seulement que la personne a déjà expérimenté la pratique. <strong>Fait ensemble</strong> signifie que le couple l’a déjà pratiquée ensemble. Ces deux informations sont indépendantes de la préférence actuelle.</p></section>
+<section class="help-section"><h3>4. Notes</h3><p>Chaque réponse peut avoir une note personnelle. En Édition, seule la note de la personne active est visible. En Lecture, les notes utiles à la comparaison sont affichées avec le nom et le rôle correspondant.</p></section>
+<section class="help-section"><h3>5. Profils et logique D/s</h3><p>Les pseudos, couleurs, attributs anatomiques et la dynamique D/s sont définis dans les profils. Les attributs sont indépendants du genre : l’application s’en sert uniquement pour masquer les pratiques incompatibles avec la configuration actuelle.</p><p>En dynamique fixe, seuls les rôles configurés sont proposés. En switch, les deux directions peuvent être renseignées et comparées.</p></section>
+<section class="help-section"><h3>6. Catalogue personnalisé</h3><p>Les pratiques ajoutées sont rangées dans <strong>Personnalisé</strong>. Leur nom et leur description sont communs au français et à l’anglais. Les variables <strong>{A}</strong>, <strong>{B}</strong>, <strong>{DOM}</strong> et <strong>{SUB}</strong> insèrent automatiquement les bons pseudos selon la variante affichée.</p><p>Vous pouvez aussi définir le niveau de risque et, si nécessaire, les conditions anatomiques côté <strong>DOM</strong> et côté <strong>SUB</strong>.</p></section>
+<section class="help-section"><h3>7. Filtres, tirage et séance</h3><p>Recherche, catégories et filtres fonctionnent dans les deux modes. Le tirage aléatoire et le Mode séance utilisent uniquement les variantes disponibles pour la configuration du couple et les filtres actifs.</p><p>Une 🚫 limite peut être marquée <strong>Fait ensemble</strong> si elle a réellement été vécue, mais elle n’est pas proposée pour une nouvelle séance.</p></section>
+<section class="help-section"><h3>8. Partage et sauvegardes</h3><p><strong>🔗 Partager la configuration</strong> contient uniquement les pseudos, couleurs, attributs anatomiques et la dynamique D/s. Il ne contient <strong>ni réponses, ni notes, ni pratiques personnalisées</strong>.</p><p><strong>💾 Complète</strong> sauvegarde tout le couple. Une sauvegarde <strong>Personne A/B</strong> ne contient que les données personnelles de cette personne : profil, anatomie, couleur, réponses, notes, états <strong>Avant</strong> et pratiques personnalisées utilisées.</p><p>À l’import, vous choisissez l’emplacement à remplacer. Les données communes de l’ancien couple, comme <strong>Fait ensemble</strong>, la séance et les réglages de sécurité, ne suivent pas dans une sauvegarde individuelle.</p></section>
+<section class="help-section"><h3>9. Données locales</h3><p>Les profils, réponses, notes, pratiques personnalisées, états, réglages de sécurité, séance et préférences d’affichage sont enregistrés localement dans ce navigateur. Un autre appareil ne reçoit rien automatiquement : utilisez le partage de configuration ou les sauvegardes JSON selon le besoin.</p></section>
+<div class="help-end">V1.1</div>
+</div>
+<div class="help-lang" data-help-lang="en">
+<p class="help-intro">The catalogue contains <strong>685 practices across 30 categories</strong>, plus your custom practices. The app is designed to prepare a couple comparison without revealing answers too early: answer separately in <strong>Edit</strong>, then compare results in <strong>Reading</strong>.</p>
+<section class="help-section"><h3>1. Edit: answer separately</h3><p>Choose the person who is answering. The interface colour shows the active person. Only their answers, notes and <strong>Before</strong> states are displayed; the other person's choices stay hidden.</p><p>General practices use <strong>INTEREST</strong>. Directed practices use <strong>DOM</strong> and <strong>SUB</strong> so the wording stays stable, even when the actual direction changes with the configuration.</p></section>
+<section class="help-section"><h3>2. Reading: compare the couple</h3><p>Reading mode matches compatible answers, shows the couple result and locks personal answers. The colour shows the currently selected dominant; changing the dominant changes how the relevant variants are read.</p><p>Shared actions remain available: <strong>Done together</strong>, pins, filters, random draw and session.</p></section>
+<section class="help-section"><h3>3. Preferences</h3><p><strong>?</strong> = unrated · 🚫 = limit · ⏳ = not now · 💭 = fantasy · 😐 = neutral · 🔥 = want to · 👑 = favorite.</p><p><strong>Before</strong> only means that the person has already experienced the practice. <strong>Done together</strong> means the couple has already practiced it together. Both are independent from the current preference.</p></section>
+<section class="help-section"><h3>4. Notes</h3><p>Each answer can have a personal note. In Edit, only the active person's note is visible. In Reading, notes useful to the comparison are shown with the matching name and role.</p></section>
+<section class="help-section"><h3>5. Profiles and D/s logic</h3><p>Names, colours, anatomy attributes and D/s dynamic are defined in profiles. Anatomy attributes are independent from gender: the app only uses them to hide practices that do not fit the current configuration.</p><p>With a fixed dynamic, only configured roles are offered. In switch mode, both directions can be answered and compared.</p></section>
+<section class="help-section"><h3>6. Custom catalogue</h3><p>Added practices are stored under <strong>Custom</strong>. Their name and description are shared by French and English. Variables <strong>{A}</strong>, <strong>{B}</strong>, <strong>{DOM}</strong> and <strong>{SUB}</strong> automatically insert the right names for the displayed variant.</p><p>You can also set the risk level and, when needed, anatomy requirements for the <strong>DOM</strong> and <strong>SUB</strong> sides.</p></section>
+<section class="help-section"><h3>7. Filters, random draw and session</h3><p>Search, categories and filters work in both modes. Random draw and Session mode only use variants available for the couple configuration and the active filters.</p><p>A 🚫 limit can be marked <strong>Done together</strong> if it was actually experienced, but it is not offered for a new session.</p></section>
+<section class="help-section"><h3>8. Sharing and backups</h3><p><strong>🔗 Share configuration</strong> contains only names, colours, anatomy attributes and the D/s dynamic. It contains <strong>no answers, notes or custom practices</strong>.</p><p><strong>💾 Full</strong> backs up the whole couple. A <strong>Person A/B</strong> backup contains only that person's personal data: profile, anatomy, colour, answers, notes, <strong>Before</strong> states and custom practices they use.</p><p>On import, you choose which slot to replace. Shared data from the previous couple, such as <strong>Done together</strong>, session and safety settings, does not travel in an individual backup.</p></section>
+<section class="help-section"><h3>9. Local data</h3><p>Profiles, answers, notes, custom practices, states, safety settings, session and display preferences are stored locally in this browser. Another device receives nothing automatically: use configuration sharing or JSON backups depending on what you need.</p></section>
+<div class="help-end">V1.1</div>
+</div>
+</div>
+</section>
+</div>
+<div aria-hidden="true" class="custom-practice-modal" hidden id="customPracticeModal">
+<div class="custom-practice-backdrop" data-custom-close="true"></div>
+<section aria-labelledby="customPracticeTitle" aria-modal="true" class="custom-practice-dialog" role="dialog">
+<form id="customPracticeForm">
+<div class="custom-practice-head"><div><span class="custom-practice-kicker"><span class="adult-lang-fr">Personnalisé</span><span class="adult-lang-en">Custom</span></span><h2 id="customPracticeTitle">Ajouter une pratique</h2></div><button aria-label="Fermer" class="custom-practice-close" data-custom-close="true" type="button">✕</button></div>
+<div class="custom-practice-body">
+<input id="customPracticeId" type="hidden"/>
+<label class="custom-field"><span data-custom-label="name">Nom de la pratique</span><input autocomplete="off" id="customPracticeName" maxlength="160" required type="text"/></label>
+<label class="custom-field"><span data-custom-label="description">Description (facultatif)</span><textarea id="customPracticeDescription" maxlength="1200" rows="4"></textarea></label>
+<div class="custom-practice-variables" data-custom-variables>
+  <span class="custom-practice-variable-hint" data-custom-variable-hint>Insérer un nom :</span>
+  <div class="custom-practice-variable-buttons">
+    <button type="button" data-custom-insert="{A}">{A}</button>
+    <button type="button" data-custom-insert="{B}">{B}</button>
+    <button type="button" data-custom-insert="{DOM}">{DOM}</button>
+    <button type="button" data-custom-insert="{SUB}">{SUB}</button>
+  </div>
+</div>
+<label class="custom-field"><span data-custom-label="risk">Risque</span><select id="customPracticeRisk"><option value="normal">Courant</option><option value="caution">Vigilance</option><option value="high">Élevé</option></select></label>
+<fieldset class="custom-anatomy"><legend data-custom-label="anatomy">Conditions anatomiques (facultatif)</legend>
+<div class="custom-anatomy-side"><strong data-custom-label="dom">DOM</strong><div class="custom-anatomy-list" data-custom-anatomy-list="dominant"></div></div>
+<div class="custom-anatomy-side"><strong data-custom-label="sub">SUB</strong><div class="custom-anatomy-list" data-custom-anatomy-list="submissive"></div></div>
+</fieldset>
+<p class="custom-practice-hint" data-custom-hint>La pratique sera rangée automatiquement dans « Personnalisé ». Le même nom et la même description sont utilisés en français et en anglais.</p>
+</div>
+<div class="custom-practice-actions"><button class="action custom-cancel" data-custom-cancel data-custom-close="true" type="button">Annuler</button><button class="action custom-submit" data-custom-submit type="submit">Ajouter</button></div>
+</form>
+</section>
+</div>
+<div aria-hidden="true" class="session-mode" hidden="" id="sessionMode">
+<div aria-labelledby="sessionModeTitle" aria-modal="true" class="session-mode-panel" role="dialog">
+<div class="session-mode-head">
+<div>
+<h2 data-i18n="sessionModeTitle" id="sessionModeTitle">Mode séance</h2>
+<p data-i18n="sessionModeIntro">Vue simplifiée de la séance, dans l’ordre défini. Les éléments 💭 Fantasme sont signalés par un bandeau bleu-lavande.</p>
+</div>
+<div class="session-mode-head-actions">
+<span class="session-mode-context"><span class="adult-lang-fr">Lecture du couple</span><span class="adult-lang-en">Couple reading</span></span>
+<button aria-label="Fermer" class="session-mode-close" data-i18n-aria-label="closeSessionMode" id="closeSessionMode" type="button">×</button>
+</div>
+</div>
+<div class="session-mode-body">
+<section class="session-mode-safety">
+<h3 data-i18n="sessionSafetyTitle">🛡️ Sécurité avant la séance</h3>
+<div id="sessionSafetySummary"></div>
+</section>
+<div class="session-mode-list" id="sessionModeList"></div>
+</div>
+</div>
+</div>
+<div aria-hidden="true" class="info-modal" hidden="" id="infoModal">
+<div class="info-modal-backdrop" data-info-close="true"></div>
+<section aria-labelledby="infoModalTitle" aria-modal="true" class="info-modal-dialog" role="dialog">
+<div class="info-modal-head">
+<h2 id="infoModalTitle">Informations</h2>
+<button aria-label="Fermer" class="info-modal-close" id="closeInfoModal" title="Fermer" type="button">✕</button>
+</div>
+<div class="info-modal-body" id="infoModalBody">
+<div class="adult-lang-fr">
+<section class="info-modal-section" data-info-section="adult" id="infoAdultFr">
+<h3>18+ · Avertissement</h3>
+<p>Cette application contient des descriptions explicites de sexualité, BDSM et pratiques D/s et s’adresse aux adultes consentants. Certaines pratiques peuvent présenter des risques importants. Les informations fournies ne constituent ni un conseil médical ni un mode d’emploi.</p>
+<p>La confirmation d’âge affichée au premier accès est une <strong>déclaration</strong>, pas un mécanisme technique de vérification d’âge.</p>
+</section>
+<section class="info-modal-section" data-info-section="privacy" id="infoPrivacyFr">
+<h3>Confidentialité</h3>
+<p>Les profils, attributs anatomiques, pratiques personnalisées (y compris leurs noms et descriptions), réponses, notes, états « Avant » / « Fait ensemble », réglages de sécurité, séance et préférences d’affichage sont enregistrés par l’application dans le stockage local de votre navigateur. Ils ne sont pas envoyés à l’éditeur par le code de la checklist.</p>
+<p>Si vous utilisez <strong>Partager la configuration</strong>, seuls les pseudos, couleurs, attributs anatomiques et la dynamique D/s sont encodés dans le lien que vous choisissez d’envoyer. Les réponses, notes et pratiques personnalisées n’y sont pas incluses. Toute personne ayant accès à ce lien peut lire cette configuration.</p>
+<p>Les sauvegardes JSON sont générées localement et restent sous votre contrôle. Une sauvegarde complète contient l’ensemble des données locales de la checklist ; une sauvegarde individuelle ne contient que les données prévues pour la personne exportée et les pratiques personnalisées qu’elle utilise. L’hébergeur du site peut néanmoins traiter les données techniques habituelles de connexion selon ses propres règles. Si des services tiers sont ajoutés plus tard (statistiques, comptes, formulaires, synchronisation, etc.), cette notice devra être mise à jour.</p>
+</section>
+<section class="info-modal-section" data-info-section="legal" id="infoLegalFr">
+<h3>Mentions légales</h3>
+<p><strong>Édition du site</strong><br/>Site édité à titre non professionnel.</p>
+<p><strong>Hébergement</strong><br/>GitHub, Inc. — GitHub Pages<br/>88 Colin P. Kelly Jr. Street<br/>San Francisco, CA 94107<br/>États-Unis</p>
+</section>
+</div>
+<div class="adult-lang-en">
+<section class="info-modal-section" data-info-section="adult" id="infoAdultEn">
+<h3>18+ · Warning</h3>
+<p>This application contains explicit descriptions of sexuality, BDSM and D/s practices and is intended for consenting adults. Some practices may involve significant risks. The information provided is neither medical advice nor an instruction manual.</p>
+<p>The age confirmation shown on first access is an <strong>age declaration</strong>, not a technical age-verification mechanism.</p>
+</section>
+<section class="info-modal-section" data-info-section="privacy" id="infoPrivacyEn">
+<h3>Privacy</h3>
+<p>Profiles, anatomy attributes, custom practices (including their names and descriptions), answers, notes, Before / Done together states, safety settings, session and display preferences are stored by the application in your browser’s local storage. They are not sent to the site publisher by the checklist code.</p>
+<p>If you use <strong>Share configuration</strong>, only names, colors, anatomy attributes and the D/s dynamic are encoded in the link you choose to send. Answers, notes and custom practices are not included. Anyone with access to that link can read that configuration.</p>
+<p>JSON backups are generated locally and remain under your control. A full backup contains all local checklist data; an individual backup contains only the data intended for the exported person and the custom practices they use. The hosting provider may still process ordinary technical connection data under its own policies. If third-party services are later added (analytics, accounts, forms, synchronization, etc.), this notice must be updated.</p>
+</section>
+<section class="info-modal-section" data-info-section="legal" id="infoLegalEn">
+<h3>Legal information</h3>
+<p><strong>Site publisher</strong><br/>Website published on a non-professional basis.</p>
+<p><strong>Hosting</strong><br/>GitHub, Inc. — GitHub Pages<br/>88 Colin P. Kelly Jr. Street<br/>San Francisco, CA 94107<br/>United States</p>
+</section>
+</div>
+</div>
+</section>
+</div>
+<main>
+<section class="individual-editor" id="individualEditor" hidden>
+  <div class="individual-editor-legend" id="individualEditorLegend"></div>
+  <div class="individual-editor-list" id="individualEditorList"></div>
+  <div class="individual-editor-empty" id="individualEditorEmpty" hidden><span class="adult-lang-fr">Aucune pratique ne correspond aux filtres actuels.</span><span class="adult-lang-en">No practice matches the current filters.</span></div>
+</section>
+<section class="couple-reader" id="coupleReader" hidden>
+  <div class="couple-reader-list" id="coupleReaderList"></div>
+  <div class="couple-reader-empty" id="coupleReaderEmpty" hidden><span class="adult-lang-fr">Aucun résultat ne correspond aux filtres actuels.</span><span class="adult-lang-en">No result matches the current filters.</span></div>
+</section>
+</main>
+<footer class="site-footer" id="siteFooter">
+<button data-info-open="adult" type="button"><span class="adult-lang-fr">18+ · Avertissement</span><span class="adult-lang-en">18+ · Warning</span></button>
+<span aria-hidden="true">·</span>
+<button data-info-open="privacy" type="button"><span class="adult-lang-fr">Confidentialité</span><span class="adult-lang-en">Privacy</span></button>
+<span aria-hidden="true">·</span>
+<button data-info-open="legal" type="button"><span class="adult-lang-fr">Mentions légales</span><span class="adult-lang-en">Legal information</span></button>
+<span aria-hidden="true">·</span>
+<a href="index.html"><span class="adult-lang-fr">Accueil</span><span class="adult-lang-en">Home</span></a>
+</footer>
+</body>
+</html>

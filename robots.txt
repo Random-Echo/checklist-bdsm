@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://random-echo.github.io/checklist-bdsm-test/sitemap.xml
