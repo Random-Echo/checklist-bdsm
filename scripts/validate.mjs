@@ -17,8 +17,13 @@ const jsFiles = [
   "score-ui.js",
   "app.js"
 ];
-const publicBaseUrl = "https://random-echo.github.io/checklist-bdsm-test/";
+const publicBaseUrl = "https://random-echo.github.io/checklist-bdsm/";
 const publicChecklistUrl = `${publicBaseUrl}checklist.html`;
+const obsoletePublicPages = [
+  ["mai", "tre-soumise.html"].join(""),
+  ["mai", "tresse-soumis.html"].join("")
+];
+const obsoletePublicSlugs = obsoletePublicPages.map(page => page.replace(/\.html$/i, ""));
 const oldAccountPattern = new RegExp([
   ["cle", "ment", "fas", "quel"].join(""),
   ["cle", "ment", "fas", "quel"].join("-")
@@ -67,17 +72,29 @@ if (version && !packageVersionMatches(version, packageJson.version)) {
   fail(`package.json: version ${packageJson.version} differente de ${version}.`);
 }
 
-for (const file of [
+const publicTextFiles = [
   "index.html",
   "checklist.html",
   "sitemap.xml",
   "robots.txt",
   "README.md",
   ...jsFiles
-].filter(exists)) {
+].filter(exists);
+
+for (const page of obsoletePublicPages) {
+  if (exists(page)) fail(`${page}: page obsolete interdite dans le projet.`);
+}
+
+for (const file of publicTextFiles) {
   const content = read(file);
   for (const marker of forbiddenPersonalMarkers) {
     if (marker.test(content)) fail(`${file}: marqueur personnel ou verification externe detecte.`);
+  }
+  const normalizedContent = content.toLowerCase();
+  for (const obsolete of [...obsoletePublicPages, ...obsoletePublicSlugs]) {
+    if (normalizedContent.includes(obsolete.toLowerCase())) {
+      fail(`${file}: reference obsolete interdite: ${obsolete}.`);
+    }
   }
 }
 
@@ -100,6 +117,10 @@ for (const htmlFile of ["index.html", "checklist.html"]) {
 
   if (!html.includes(`<meta property="og:url" content="${expectedCanonical}"/>`)) {
     fail(`${htmlFile}: og:url manquant ou different de ${expectedCanonical}.`);
+  }
+
+  if (/\bnoindex\b/i.test(html)) {
+    fail(`${htmlFile}: noindex interdit sur une page canonique.`);
   }
 }
 

@@ -10,6 +10,8 @@ Le principe est simple :
 - les donnees restent dans le navigateur, sans compte ni serveur.
 
 ## Acces
+
+- Configuration : https://random-echo.github.io/checklist-bdsm/
 - Checklist : https://random-echo.github.io/checklist-bdsm/checklist.html
 
 ## Confidentialite
